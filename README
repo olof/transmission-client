@@ -1,6 +1,9 @@
 NAME
     Transmission::Client - Interface to Transmission
 
+VERSION
+    0.01
+
 SYNOPSIS
      use Transmission::Client;
 

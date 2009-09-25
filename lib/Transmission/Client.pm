@@ -4,6 +4,10 @@ package Transmission::Client;
 
 Transmission::Client - Interface to Transmission
 
+=head1 VERSION
+
+0.01
+
 =head1 SYNOPSIS
 
  use Transmission::Client;
@@ -28,6 +32,7 @@ use JSON;
 use LWP::UserAgent;
 use MIME::Base64;
 
+our $VERSION = '0.01';
 our %FIELDS_TEMPLATE;
 
 =head1 VARIABLES
