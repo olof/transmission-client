@@ -352,7 +352,10 @@ sub torrents {
         $args{'fields'} = [ $FIELDS_TEMPLATE{'default'}->() ];
     }
 
-    unless($list = $self->rpc('torrent-get' => %args)->{'torrents'}) {
+    if(my $res = $self->rpc('torrent-get' => %args)) {
+        $list = $res->{'torrents'};
+    }
+    else {
         return;
     }
 
@@ -458,9 +461,11 @@ Returns the path to where transmission download files.
             if(defined $val) {
                 return $self->rpc('session-set', $key => $val);
             }
-            else {
-                return $self->rpc('session-get')->{$key};
+            elsif(my $res = $self->rpc('session-get')) {
+                return $res->{$key};
             }
+
+            return;
         });
     }
 
@@ -468,7 +473,8 @@ Returns the path to where transmission download files.
         (my $key = $sub) =~ s/_(\w)/{uc $1}/ge;
 
         $meta->add_method($sub => sub {
-            return shift->rpc('session-stats')->{'session-stats'}{$key};
+            my $res = shift->rpc('session-stats');
+            return $res ? $res->{'session-stats'}{$key} : undef;
         });
     }
 }
