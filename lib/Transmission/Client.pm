@@ -498,7 +498,6 @@ sub rpc {
     my $self = shift;
     my $method = shift or return {};
     my %args = _translate_keys(@_);
-    my $session_id_header = 'X-Transmission-Session-Id';
     my($tag, $res, $post);
 
     if(ref $args{'ids'} eq 'ARRAY') {
@@ -511,8 +510,6 @@ sub rpc {
                 tag       => $tag,
                 arguments => \%args,
             });
-
-    $self->_ua->default_header($session_id_header => $self->session_id);
 
     $res = $self->_ua->post($self->url, Content => $post);
 
