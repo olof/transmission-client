@@ -93,7 +93,7 @@ empty list in addtion to what spesified. Check this attribute if so happens.
 
 =cut
 
-has errstr => (
+has error => (
     is => 'rw',
     isa => 'Str',
     default => '',
@@ -214,7 +214,7 @@ sub add {
     my %args = @_;
 
     if($args{'filename'} and $args{'metainfo'}) {
-        $self->errstr("Filename and metainfo argument crash");
+        $self->error("Filename and metainfo argument crash");
         return;
     }
     elsif($args{'filename'}) {
@@ -225,7 +225,7 @@ sub add {
         return $self->rpc('torrent-add', %args);
     }
     else {
-        $self->errstr("Need either filename or metainfo argument");
+        $self->error("Need either filename or metainfo argument");
         return;
     }
 }
@@ -248,7 +248,7 @@ sub remove {
     my %args = @_;
 
     if(!defined $args{'ids'}) {
-        $self->errmsg("ids argument is required");
+        $self->error("ids argument is required");
         return;
     }
     elsif($args{'ids'} eq 'all') {
@@ -311,7 +311,7 @@ sub _do_ids_action {
     }
 
     if(!defined $ids) {
-        $self->errmsg("ids are missing in argument list");
+        $self->error("ids are missing in argument list");
         return;
     }
     elsif($ids eq 'all') {
@@ -514,14 +514,14 @@ sub rpc {
     $res = $self->_ua->post($self->url, Content => $post);
 
     unless($res->is_success) {
-        $self->errmsg($res->status_line);
+        $self->error($res->status_line);
         return;
     }
 
     $res = from_json($res->content);
 
     unless($res->{'tag'} == $tag) {
-        $self->errmsg("Tag mismatch");
+        $self->error("Tag mismatch");
         return;
     }
 
