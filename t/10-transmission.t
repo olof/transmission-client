@@ -13,14 +13,14 @@ ok($obj, "Created transmission object");
 
 $connected = $obj->version; # check for connection
 
-_ok(scalar($obj->torrents), "->torrents");
-_ok(scalar($obj->stats), "->stats");
+_ok(scalar($obj->torrents), "->torrents") or diag($obj->error);
+_ok(scalar($obj->stats), "->stats") or diag($obj->error);
 
-ok(!$obj->add, "Could not add");
-ok(!$obj->remove, "Could not remove");
-ok(!$obj->start, "Could not start");
-ok(!$obj->stop, "Could not stop");
-ok(!$obj->verify, "Could not verify");
+ok(!$obj->add, "Could not add") or diag($obj->error);
+ok(!$obj->remove, "Could not remove") or diag($obj->error);
+ok(!$obj->start, "Could not start") or diag($obj->error);
+ok(!$obj->stop, "Could not stop") or diag($obj->error);
+ok(!$obj->verify, "Could not verify") or diag($obj->error);
 
 sub _ok {
     my $value = shift;

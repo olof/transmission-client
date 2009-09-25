@@ -33,27 +33,8 @@ use LWP::UserAgent;
 use MIME::Base64;
 
 our $VERSION = '0.01';
-our %FIELDS_TEMPLATE;
 
-=head1 VARIABLES
-
-=head2 %FIELDS_TEMPLATE
-
-A hash containing C<template_name => sub{}> keys. the C<sub{}> returns
-a list of keys.
-
-Predefined templates are: all, date, download, error, files, upload.
-
-=cut
-
-%FIELDS_TEMPLATE = (
-    date => sub { grep { /date|eta/i } $FIELDS_TEMPLATE{'all'}->() },
-    download => sub { grep { /download/i } $FIELDS_TEMPLATE{'all'}->() },
-    error => sub { grep { /error/i } $FIELDS_TEMPLATE{'all'}->() },
-    files => sub { grep { /files|hash/i } $FIELDS_TEMPLATE{'all'}->() },
-    upload => sub { grep { /upload/i } $FIELDS_TEMPLATE{'all'}->() },
-    default => sub { qw/id name comment error errorString eta/ },
-    all => sub { qw/
+my @fields = qw/
         activityDate addedDate announceResponse announceURL
         comment corruptEver creator dateCreated
         desiredAvailable doneDate downloadDir downloadedEver
@@ -70,8 +51,7 @@ Predefined templates are: all, date, download, error, files, upload.
         timesCompleted trackers totalSize uploadedEver
         uploadLimitMode uploadLimit uploadRatio wanted
         webseeds webseedsSendingToUs
-    / },
-);
+    /;
 
 =head1 ATTRIBUTES
 
@@ -87,6 +67,21 @@ has url => (
     is => 'ro',
     isa => 'Str',
     default => 'http://localhost:9091/transmission/rpc',
+);
+
+=head2 session_id
+
+ $str = $self->session_id;
+
+Returns the session ID used in HTTP header, when comunicating with
+transmission.
+
+=cut
+
+has session_id => (
+    is => 'rw',
+    isa => 'Str',
+    default => '',
 );
 
 =head2 error
@@ -316,7 +311,7 @@ sub _do_ids_action {
     }
 
     if(!defined $ids) {
-        $self->error("ids are missing in argument list");
+        $self->error("ids argument is required");
         return;
     }
     elsif($ids eq 'all') {
@@ -350,12 +345,7 @@ sub torrents {
     my %args = @_;
     my $list;
 
-    if(my $template = delete $args{'template'}) {
-        $args{'fields'} = [ $FIELDS_TEMPLATE{$template}->() ];
-    }
-    if(!$args{'fields'}) {
-        $args{'fields'} = [ $FIELDS_TEMPLATE{'default'}->() ];
-    }
+    $args{'fields'} ||= \@fields;
 
     if(my $res = $self->rpc('torrent-get' => %args)) {
         $list = $res->{'torrents'};
@@ -384,10 +374,14 @@ sub _translateCamel {
         (my $key = $_) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
 
         if(my $tr = $self->can("_translate_$key")) {
-            $h->{$key} = $tr->($h->{$_});
+            $h->{$key} = $tr->( delete $h->{$_} );
         }
         else {
             $h->{$key} = delete $h->{$_};
+        }
+
+        if(ref $h->{$key} eq 'HASH') {
+            $self->_translateCamel($h->{$key});
         }
     }
 }
@@ -486,14 +480,20 @@ Returns the path to where transmission download files.
 
 =head2 stats
 
- ?? = $self->stats;
+ $hash_ref = $self->stats;
+
+Returns data from 'session-stats' RPC call. See chapter 4.2 in RPC spec.
+Note: All keys are converted from "CamelCase" to "camel_case".
 
 =cut
 
 sub stats {
-    my $stats = shift->rpc('session-stats');
+    my $self = shift;
+    my $stats = $self->rpc('session-stats');
 
-    return $stats->{'session-stats'} if(ref $stats eq 'HASH');
+    $self->_translateCamel($stats);
+
+    return $stats if(ref $stats eq 'HASH');
     return;
 }
 
@@ -507,8 +507,10 @@ Communicate with backend. This methods is meant for internal use.
 
 sub rpc {
     my $self = shift;
-    my $method = shift or return {};
+    my $method = shift or return;
     my %args = _translate_keys(@_);
+    my $nested = delete $args{'_nested'}; # internal flag
+    my $session_header_name = 'X-Transmission-Session-Id';
     my($tag, $res, $post);
 
     if(ref $args{'ids'} eq 'ARRAY') {
@@ -522,9 +524,15 @@ sub rpc {
                 arguments => \%args,
             });
 
+    $self->_ua->default_header($session_header_name => $self->session_id);
+
     $res = $self->_ua->post($self->url, Content => $post);
 
     unless($res->is_success) {
+        if($res->code == 409 and !$nested) {
+            $self->session_id($res->header($session_header_name));
+            return $self->rpc($method => %args, _nested => 1);
+        }
         $self->error($res->status_line);
         return;
     }
@@ -535,8 +543,10 @@ sub rpc {
         $self->error("Tag mismatch");
         return;
     }
-
-    warn $res->{'result'}; #??
+    unless($res->{'result'} eq 'success') {
+        $self->error($res->{'result'});
+        return;
+    }
 
     return $res->{'arguments'};
 }
