@@ -4,11 +4,18 @@ package Transmission::AttributeRole;
 
 Transmission::AttributeRole - For Torrent and Client
 
+=head1 DESCRIPTION
+
+This role is used by L<Transmission::Client> and L<Transmission::Torrent>.
+It requires the consuming class to provide the method C<read_all()>.
+
 =cut
 
 use Moose::Role;
 
 requires 'read_all';
+
+=head1 ATTRIBUTES
 
 =head2 client
 
@@ -21,14 +28,14 @@ Returns a L<Transmission::Client> object.
 has client => (
     is => 'ro',
     isa => 'Object',
-    required => 1,
 );
 
 =head2 lazy_write
 
  $bool = $self->lazy_write;
+ $self->lazy_write($bool);
 
-Will prevent writeable attributes to send a request to transmission.
+Will prevent writeable attributes from sending a request to Transmission.
 L</write_all()> can then be used to sync data.
 
 =cut
@@ -44,6 +51,8 @@ has lazy_write => (
  $bool = $self->eager_read;
 
 Setting this attribute in constructor forces L</read_all()> to be called.
+This will again populate all (or most) attributes right after the object is
+constructed (if Transmission answers the request).
 
 =cut
 
