@@ -4,10 +4,23 @@ package Transmission::Torrent;
 
 Transmission::Torrent
 
+=head1 DESCRIPTION
+
+See "3.2 Torrent Mutators" and "3.3 Torrent accessors" from
+L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+
+=head2 SEE ALSO
+
+L<Transmission::AttributeRole>
+
 =cut
 
 use Moose;
 use Transmission::Torrent::File;
+
+our(%READ, %BOTH);
+
+with 'Transmission::AttributeRole';
 
 =head1 ATTRIBUTES
 
@@ -22,20 +35,6 @@ Returns the id that identifies this torrent in transmission.
 has id => (
     is => 'ro',
     isa => 'Int',
-    required => 1,
-);
-
-=head2 client
-
- $obj = $self->client;
-
-Returns a L<Transmission::Client> object.
-
-=cut
-
-has client => (
-    is => 'ro',
-    isa => 'Object',
     required => 1,
 );
 
@@ -321,7 +320,7 @@ True if "upload_limit" is honored
 
 =cut
 
-{
+BEGIN {
     my %set = qw/
         files-wanted          ArrayRef
         files-unwanted        ArrayRef
@@ -331,7 +330,7 @@ True if "upload_limit" is honored
         priority-low          ArrayRef
         priority-normal       ArrayRef
     /;
-    my %both = qw/
+    %BOTH = qw/
         bandwidthPriority     Num
         downloadLimit         Num
         downloadLimited       Bool
@@ -341,7 +340,7 @@ True if "upload_limit" is honored
         uploadLimit           Num
         uploadLimited         Bool
     /;
-    my %read = qw/
+    %READ = qw/
         activityDate                Num
         addedDate                   Num
         comment                     Str
@@ -402,6 +401,7 @@ True if "upload_limit" is honored
             is => 'rw',
             isa => $set{$camel},
             trigger => sub {
+                return if($_[0]->lazy_write);
                 $_[0]->client->rpc('torrent-set' =>
                     ids => [ $_[0]->id ], $camel => $_[1],
                 );
@@ -409,69 +409,73 @@ True if "upload_limit" is honored
         );
     }
 
-    for my $camel (keys %both) {
+    for my $camel (keys %BOTH) {
         (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
         has $name => (
             is => 'rw',
-            isa => "Maybe[$both{$camel}]",
+            isa => "Maybe[$BOTH{$camel}]",
             lazy => 1,
             trigger => sub {
+                return if($_[0]->lazy_write);
                 $_[0]->client->rpc('torrent-set' =>
                     ids => [ $_[0]->id ], $camel => $_[1],
                 );
             },
             default => sub {
-                my $res = $_[0]->client->rpc('torrent-get' =>
-                                ids => [ $_[0]->id ],
-                                fields => [ $camel ],
-                            ) or return;
+                my $data = $_[0]->client->rpc('torrent-get' =>
+                               ids => [ $_[0]->id ],
+                               fields => [ $camel ],
+                           ) or return;
 
-                return $res->{'torrents'}[0]{$camel};
+                return $data->{'torrents'}[0]{$camel};
             },
         );
     }
 
-    for my $camel (keys %read) {
+    for my $camel (keys %READ) {
         (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
         has $name => (
             is => 'ro',
-            isa => "Maybe[$read{$camel}]",
+            isa => "Maybe[$READ{$camel}]",
             writer => "_set_$name",
             lazy => 1,
             default => sub {
-                my $res = $_[0]->client->rpc('torrent-get' =>
-                                ids => [ $_[0]->id ],
-                                fields => [ $camel ],
-                            ) or return;
+                my $data = $_[0]->client->rpc('torrent-get' =>
+                               ids => [ $_[0]->id ],
+                               fields => [ $camel ],
+                           ) or return;
 
-                return $res->{'torrents'}[0]{$camel};
+                return $data->{'torrents'}[0]{$camel};
             },
         );
     }
 
-    __PACKAGE__->meta->add_method(refresh_all => sub {
+    __PACKAGE__->meta->add_method(read_all => sub {
         my $self = shift;
-        my($res, $torrent);
+        my $lazy = $self->lazy_write;
+        my $data;
 
-        $res = $self->client->rpc('torrent-get' =>
-                   ids => [ $self->id ],
-                   fields => [ keys %both, keys %read ],
-               ) or return;
+        $data = $self->client->rpc('torrent-get' =>
+                    ids => [ $self->id ],
+                    fields => [ keys %BOTH, keys %READ ],
+                ) or return;
 
-        $torrent = $res->{'torrents'}[0] or return;
+        $data = $data->{'torrents'}[0] or return;
 
-        for my $camel (keys %$torrent) {
+        $self->lazy_write(1);
+
+        for my $camel (keys %$data) {
             (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
-            my $value = $torrent->{$camel};
+            my $value = $data->{$camel};
             my $writer;
 
-            if($both{$camel}) {
+            if($BOTH{$camel}) {
                 $writer = $name;
-                $value = "$value" unless($both{$camel} eq 'ArrayRef');
+                $value = "$value" unless($BOTH{$camel} eq 'ArrayRef');
             }
-            elsif($read{$camel}) {
+            elsif($READ{$camel}) {
                 $writer = "_set_$name";
-                $value = "$value" unless($read{$camel} eq 'ArrayRef');
+                $value = "$value" unless($READ{$camel} eq 'ArrayRef');
             }
             else {
                 next;
@@ -482,6 +486,8 @@ True if "upload_limit" is honored
 
             $self->$writer($value);
         }
+
+        $self->lazy_write($lazy);
 
         return 1;
     });
@@ -505,15 +511,15 @@ sub _build_files {
     my $self = shift;
     my $files = [];
     my $stats = [];
-    my $res;
+    my $data;
 
-    $res = $self->client->rpc('torrent-get' =>
-               ids => [ $self->id ],
-               fields => [ qw/ files fileStats / ],
-           ) or return [];
+    $data = $self->client->rpc('torrent-get' =>
+                ids => [ $self->id ],
+                fields => [ qw/ files fileStats / ],
+            ) or return [];
 
-    $files = $res->{'torrents'}[0]{'files'};
-    $stats = $res->{'torrents'}[0]{'fileStats'};
+    $files = $data->{'torrents'}[0]{'files'};
+    $stats = $data->{'torrents'}[0]{'fileStats'};
 
     while(@$stats) {
         my $stats = shift @$stats or last;
@@ -527,12 +533,18 @@ sub _build_files {
 
 =head1 METHODS
 
-=head2 refresh_all
+=head2 read_all
 
- $bool = $self->refresh_all;
+ $bool = $self->read_all;
 
 This method will refresh all attributes in one RPC request, while calling one
 and one attribute, results in one-and-one request.
+
+=head2 write_all
+
+ $bool = $self->write_all;
+
+This method will write all attributes in one RPC request.
 
 =head2 start
 
