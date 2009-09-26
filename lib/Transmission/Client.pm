@@ -363,7 +363,7 @@ sub torrents {
         $self->_translateCamel($torrent);
     }
 
-    return wantarray ? @$list : $list;
+    return $list;
 }
 
 sub _translateCamel {
