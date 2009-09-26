@@ -225,7 +225,7 @@ BEGIN {
 
         $self->lazy_write(1);
 
-        for my $camel (keys %$data) {
+        for my $camel (keys %both) {
             (my $name = $camel) =~ s/-/_/g;
             my $value = $data->{$camel};
 

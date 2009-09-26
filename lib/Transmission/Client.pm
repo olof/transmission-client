@@ -23,11 +23,12 @@ annoying in the constructor.
 
  my $client = Transmission::Client->new;
  my $torrent_id = 2;
+ my $data = base64_encoded_data();
 
  $client->add(metainfo => $data) or confess $client->error;
  $client->remove($torrent_id) or confess $client->error;
 
- for my $torrent (@{ $self->torrents }) {
+ for my $torrent (@{ $client->torrents }) {
     print $torrent->name, "\n";
     for my $file (@{ $torrent->files }) {
         print "> ", $file->name, "\n";
@@ -453,7 +454,10 @@ sub read_torrents {
     }
 
     for my $torrent (@$list) {
-        $torrent = Transmission::Torrent->new(client => $self);
+        $torrent = Transmission::Torrent->new(
+                        client => $self,
+                        id => $torrent->{'id'},
+                   );
         $torrent->read_all($torrent);
     }
 
@@ -522,7 +526,7 @@ sub rpc {
 
 =head2 read_all
 
- $self->read_all;
+ 1 == $self->read_all;
 
 This method will try to populate ALL torrent, session and stats information,
 using three requests.
@@ -534,9 +538,9 @@ sub read_all {
 
     $self->session->read_all;
     $self->stats->read_all;
-    $self->read_torents(eager_read => 1);
+    $self->read_torrents(eager_read => 1);
 
-    return;
+    return 1;
 }
 
 =head1 LICENSE

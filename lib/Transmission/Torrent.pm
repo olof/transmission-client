@@ -37,6 +37,7 @@ Returns the id that identifies this torrent in transmission.
 has id => (
     is => 'ro',
     isa => 'Int',
+    writer => '_set_id',
     required => 1,
 );
 
@@ -499,6 +500,8 @@ BEGIN {
 
         return 1;
     });
+
+    $READ{'id'} = 'Int'; # this is required to be read
 }
 
 =head2 files
