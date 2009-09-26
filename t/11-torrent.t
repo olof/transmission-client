@@ -15,4 +15,6 @@ my $obj = Transmission::Torrent->new(
 ok($obj->name, "->name is ok");
 ok($obj->refresh_all, "data is refreshed");
 ok($obj->total_size, "total_size is set");
+ok($obj->files, "files is set");
+ok($obj->files->[0]->name, "file data is set");
 

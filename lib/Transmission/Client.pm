@@ -13,6 +13,19 @@ Transmission::Client - Interface to Transmission
  use Transmission::Client;
 
  my $client = Transmission::Client->new;
+ my $torrent_id = 2;
+
+ $client->add(metainfo => $data) or confess $client->error;
+ $client->remove($torrent_id) or confess $client->error;
+
+ for my $torrent (@{ $self->torrents }) {
+    print $torrent->name, "\n";
+    for my $file (@{ $torrent->files }) {
+        print "> ", $file->name, "\n";
+    }
+ }
+
+ my $stats = $client->stats;
 
 =head1 DESCRIPTION
 
@@ -32,8 +45,11 @@ use JSON;
 use LWP::UserAgent;
 use MIME::Base64;
 use Transmission::Torrent;
+use Transmission::Session;
 
 our $VERSION = '0.01';
+
+with 'Transmission::AttributeRole';
 
 =head1 ATTRIBUTES
 
@@ -42,6 +58,7 @@ our $VERSION = '0.01';
  $str = $self->url;
 
 Returns an URL to where the transmission rpc api is.
+Default value is "http://localhost:9091/transmission/rpc";
 
 =cut
 
@@ -49,21 +66,6 @@ has url => (
     is => 'ro',
     isa => 'Str',
     default => 'http://localhost:9091/transmission/rpc',
-);
-
-=head2 session_id
-
- $str = $self->session_id;
-
-Returns the session ID used in HTTP header, when comunicating with
-transmission.
-
-=cut
-
-has session_id => (
-    is => 'rw',
-    isa => 'Str',
-    default => '',
 );
 
 =head2 error
@@ -138,6 +140,45 @@ has _ua => (
     },
 );
 
+=head2 session
+
+ $session_obj = $self->session;
+ $stats_obj = $self->stats;
+
+Returns an instance of L<Transmission::Session>.
+C<stats()> is a proxy method on L</session>.
+
+=cut
+
+has session => (
+    is => 'ro',
+    lazy => 1,
+    handles => [qw/stats/],
+    default => sub {
+        Transmission::Session->new( client => $_[0] );
+    },
+);
+
+=head2 torrents
+
+ $array_ref = $self->torrents;
+ $self->clear_torrents;
+
+Returns an array-ref of L<Transmission::Torrent> objects. Default value
+is a full list of all known torrents, with as little data as possible read
+from Transmission. This means that each request on a attribute on an object
+will require a new request to Transmission. See L</read_torrents> for more
+information.
+
+=cut
+
+has torrents => (
+    is => 'rw',
+    lazy => 1,
+    clearer => "clear_torrents",
+    builder => "read_torrents",
+);
+
 =head2 version
 
  $str = $self->version;
@@ -171,6 +212,12 @@ sub _build_version {
 
     return q();
 }
+
+has _session_id => (
+    is => 'rw',
+    isa => 'Str',
+    default => '',
+);
 
 =head1 METHODS
 
@@ -353,94 +400,66 @@ sub _do_ids_action {
     }
 }
 
-=head2 torrents
+=head2 read_torrents
 
- $array_ref = $self->torrents(%args);
+ @list = $self->read_torrents(%args);
+ $array_ref = $self->read_torrents(%args);
 
- key       | value type & description
- ----------+-------------------------------------------------
- ids       | array      torrent list, as described in 3.1
-           |            this is optional
- fields    | array      described in 3.3 
-           |            default field array is ["id"]
- template  | string     a template describing pre-defined fields
- 
-Returns a list of torrent data or empty list on failure.
+ key         | value type & description
+ ------------+-------------------------------------------------
+ ids         | array      torrent list, as described in 3.1
+             |            this is optional
+ eager_read  | will create objects with as much data as possible.
+
+=over 4
+
+=item List context
+
+Returns a list of L<Transmission::Torrent> objects and sets the L</torrents>
+attribute.
+
+=item Scalar context
+
+Returns an array-ref of L<Transmission::Torrent>.
+
+=back
 
 =cut
 
-sub torrents {
+sub read_torrents {
     my $self = shift;
     my %args = @_;
     my $list;
 
-    $args{'fields'} ||= [
-        keys %Transmission::Torrent::READ,
-        keys %Transmission::Torrent::BOTH,
-    ];
+    if($args{'eager_read'}) {
+        $args{'fields'} = [
+            keys %Transmission::Torrent::READ,
+            keys %Transmission::Torrent::BOTH,
+        ];
+    }
+    else {
+        $args{'fields'} = [qw/id/];
+    }
 
     if(my $data = $self->rpc('torrent-get' => %args)) {
         $list = $data->{'torrents'};
     }
     else {
-        return;
+        $list = [];
     }
 
     for my $torrent (@$list) {
-        $self->_translateCamel($torrent);
-        local $torrent->{'parent'} = $self;
-        $torrent = Transmission::Torrent->new(%$torrent);
+        $torrent = Transmission::Torrent->new(client => $self);
+        $torrent->read_all($torrent);
     }
 
-    return $list;
-}
-
-sub _translateCamel {
-    my $self = shift;
-    my $h    = shift;
-
-    for(keys %$h) {
-        (my $key = $_) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
-
-        if(my $tr = $self->can("_translate_$key")) {
-            $h->{$key} = $tr->( delete $h->{$_} );
-        }
-        else {
-            $h->{$key} = delete $h->{$_};
-        }
-
-        if(ref $h->{$key} eq 'HASH') {
-            $self->_translateCamel($h->{$key});
-        }
+    if(wantarray) {
+        $self->torrents($list);
+        return @$list;
     }
-}
-
-sub _translate_status {
-    return 'queued'      if($_[0] == 1);
-    return 'checking'    if($_[0] == 2);
-    return 'downloading' if($_[0] == 4);
-    return 'seeding'     if($_[0] == 8);
-    return 'stopped'     if($_[0] == 16);
-    return $_[0];
-}
-
-=head2 stats
-
- $hash_ref = $self->stats;
-
-Returns data from 'session-stats' RPC call. See chapter 4.2 in RPC spec.
-Note: All keys are converted from "CamelCase" to "camel_case".
-
-=cut
-
-sub stats {
-    my $self = shift;
-    my $stats = $self->rpc('session-stats');
-
-    $self->_translateCamel($stats);
-
-    return $stats if(ref $stats eq 'HASH');
-    return;
+    else {
+        return $list;
+    }
 }
 
 =head2 rpc
@@ -454,7 +473,7 @@ Communicate with backend. This methods is meant for internal use.
 sub rpc {
     my $self = shift;
     my $method = shift or return;
-    my %args = _translate_keys(@_);
+    my %args = $self->_translate_keys(@_);
     my $nested = delete $args{'_nested'}; # internal flag
     my $session_header_name = 'X-Transmission-Session-Id';
     my($tag, $res, $post);
@@ -470,13 +489,13 @@ sub rpc {
                 arguments => \%args,
             });
 
-    $self->_ua->default_header($session_header_name => $self->session_id);
+    $self->_ua->default_header($session_header_name => $self->_session_id);
 
     $res = $self->_ua->post($self->url, Content => $post);
 
     unless($res->is_success) {
         if($res->code == 409 and !$nested) {
-            $self->session_id($res->header($session_header_name));
+            $self->_session_id($res->header($session_header_name));
             return $self->rpc($method => %args, _nested => 1);
         }
         $self->error($res->status_line);
@@ -497,16 +516,23 @@ sub rpc {
     return $res->{'arguments'};
 }
 
-sub _translate_keys {
-    my %args = @_;
+=head2 read_all
 
-    for my $orig (keys %args) {
-        my $new = $orig;
-        $new =~ tr/_/-/;
-        $args{$new} = delete $args{$orig};
-    }
+ $self->read_all;
 
-    return %args;
+This method will try to populate ALL torrent, session and stats information,
+using three requests.
+
+=cut
+
+sub read_all {
+    my $self = shift;
+
+    $self->session->read_all;
+    $self->stats->read_all;
+    $self->read_torents(eager_read => 1);
+
+    return;
 }
 
 =head1 LICENSE

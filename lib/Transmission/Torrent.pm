@@ -452,15 +452,17 @@ BEGIN {
 
     __PACKAGE__->meta->add_method(read_all => sub {
         my $self = shift;
+        my $data = shift; # internal use
         my $lazy = $self->lazy_write;
-        my $data;
 
-        $data = $self->client->rpc('torrent-get' =>
-                    ids => [ $self->id ],
-                    fields => [ keys %BOTH, keys %READ ],
-                ) or return;
+        unless($data) {
+            $data = $self->client->rpc('torrent-get' =>
+                        ids => [ $self->id ],
+                        fields => [ keys %BOTH, keys %READ ],
+                    ) or return;
 
-        $data = $data->{'torrents'}[0] or return;
+            $data = $data->{'torrents'}[0] or return;
+        }
 
         $self->lazy_write(1);
 
