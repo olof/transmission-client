@@ -17,18 +17,17 @@ DESCRIPTION
     one use Moose and it won't die or confess, which is especially annoying
     in the constructor.
 
-VARIABLES
-  %FIELDS_TEMPLATE
-    A hash containing "template_name =" sub{}> keys. the "sub{}" returns a
-    list of keys.
-
-    Predefined templates are: all, date, download, error, files, upload.
-
 ATTRIBUTES
   url
      $str = $self->url;
 
     Returns an URL to where the transmission rpc api is.
+
+  session_id
+     $str = $self->session_id;
+
+    Returns the session ID used in HTTP header, when comunicating with
+    transmission.
 
   error
      $str = $self->error;
@@ -101,7 +100,6 @@ METHODS
 
   torrents
      $array_ref = $self->torrents(%args);
-     @array = $self->torrents(%args);
 
      key       | value type & description
      ----------+-------------------------------------------------
@@ -146,7 +144,10 @@ METHODS
      $bool = $self->speed_limit_up_enabled;
 
   stats
-     ?? = $self->stats;
+     $hash_ref = $self->stats;
+
+    Returns data from 'session-stats' RPC call. See chapter 4.2 in RPC spec.
+    Note: All keys are converted from "CamelCase" to "camel_case".
 
   rpc
      $any = $self->rpc($method, %args);

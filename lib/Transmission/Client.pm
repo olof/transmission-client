@@ -31,6 +31,7 @@ use DateTime::Duration;
 use JSON;
 use LWP::UserAgent;
 use MIME::Base64;
+use Transmission::Torrent;
 
 our $VERSION = '0.01';
 
@@ -326,7 +327,6 @@ sub _do_ids_action {
 =head2 torrents
 
  $array_ref = $self->torrents(%args);
- @array = $self->torrents(%args);
 
  key       | value type & description
  ----------+-------------------------------------------------
@@ -354,13 +354,10 @@ sub torrents {
         return;
     }
 
-    @$list = sort { 
-                    $a->{'status'} <=> $b->{'status'}
-                 || $a->{'name'}   cmp $b->{'name'}
-             } @$list;
-
     for my $torrent (@$list) {
         $self->_translateCamel($torrent);
+        local $torrent->{'parent'} = $self;
+        $torrent = Transmission::Torrent->new(%$torrent);
     }
 
     return $list;
@@ -397,17 +394,21 @@ sub _translate_status {
 
 =head2 encryption
 
- ?? = $self->encryption;
+ $str = $self->encryption;
+
+Can be: "required", "preferred" or "tolerated".
 
 =head2 download_dir
 
  $str = $self->download_dir;
 
-Returns the path to where transmission download files.
+Default path to download torrents
 
 =head2 peer_limit
 
  $int = $self->peer_limit;
+
+
 
 =head2 pex_allowed
 
