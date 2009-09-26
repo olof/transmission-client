@@ -9,10 +9,12 @@ Transmission::Session - Transmission session
 See "4 Session requests" from
 L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
 
+This class holds data, regarding the Transmission session.
+
 =cut
 
 use Moose;
-use Transmission::Session::Stats;
+use Transmission::Stats;
 
 with 'Transmission::AttributeRole';
 
@@ -22,7 +24,7 @@ with 'Transmission::AttributeRole';
 
  $stats_obj = $self->stats;
  
-Returns a L<Transmission::Session::Stats> object.
+Returns a L<Transmission::Stats> object.
 
 =cut
 
@@ -31,9 +33,7 @@ has stats => (
     isa => 'Object',
     lazy => 1,
     default => sub {
-        Transmission::Session::Stats->new(
-            client => $_[0]->client,
-        );
+        Transmission::Stats->new(client => $_[0]->client);
     }
 );
 
@@ -203,7 +203,7 @@ BEGIN {
         speed-limit-up             Num
         speed-limit-up-enabled     Bool
     /;
-    
+
     for my $camel (keys %both) {
         (my $name = $camel) =~ s/-/_/g;
         has $name => (

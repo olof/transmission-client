@@ -8,6 +8,15 @@ Transmission::Client - Interface to Transmission
 
 0.01
 
+=head1 DESCRIPTION
+
+The documentation is half copy/paste from the Transmission RPC spec:
+L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+
+This module differs from L<P2P::Transmission> in (at least) two ways:
+This one use L<Moose> and it won't die or confess, which is especially
+annoying in the constructor.
+
 =head1 SYNOPSIS
 
  use Transmission::Client;
@@ -25,16 +34,11 @@ Transmission::Client - Interface to Transmission
     }
  }
 
- my $stats = $client->stats;
+ print $client->session->download_dir, "\n";
 
-=head1 DESCRIPTION
+=head1 SEE ALSO
 
-The documentation is half copy/paste from the Transmission RPC spec:
-L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
-
-This module differs from L<P2P::Transmission> in (at least) two ways:
-This one use L<Moose> and it won't die or confess, which is especially
-annoying in the constructor.
+L<Transmission::AttributeRole>
 
 =cut
 
@@ -57,7 +61,7 @@ with 'Transmission::AttributeRole';
 
  $str = $self->url;
 
-Returns an URL to where the transmission rpc api is.
+Returns an URL to where the Transmission rpc api is.
 Default value is "http://localhost:9091/transmission/rpc";
 
 =cut

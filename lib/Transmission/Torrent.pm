@@ -9,7 +9,9 @@ Transmission::Torrent
 See "3.2 Torrent Mutators" and "3.3 Torrent accessors" from
 L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
 
-=head2 SEE ALSO
+This class handles data related to a torrent known to Transmission.
+
+=head1 SEE ALSO
 
 L<Transmission::AttributeRole>
 
@@ -18,7 +20,7 @@ L<Transmission::AttributeRole>
 use Moose;
 use Transmission::Torrent::File;
 
-our(%READ, %BOTH);
+our(%READ, %BOTH); # these variables are meant for internal usage
 
 with 'Transmission::AttributeRole';
 
@@ -425,8 +427,9 @@ BEGIN {
                 my $data = $_[0]->client->rpc('torrent-get' =>
                                ids => [ $_[0]->id ],
                                fields => [ $camel ],
-                           ) or return;
+                           );
 
+                return unless($data);
                 return $data->{'torrents'}[0]{$camel};
             },
         );
@@ -443,8 +446,9 @@ BEGIN {
                 my $data = $_[0]->client->rpc('torrent-get' =>
                                ids => [ $_[0]->id ],
                                fields => [ $camel ],
-                           ) or return;
+                           );
 
+                return unless($data);
                 return $data->{'torrents'}[0]{$camel};
             },
         );
@@ -464,6 +468,7 @@ BEGIN {
             $data = $data->{'torrents'}[0] or return;
         }
 
+        # prevent from fireing off trigger in attributes
         $self->lazy_write(1);
 
         for my $camel (keys %$data) {
@@ -489,6 +494,7 @@ BEGIN {
             $self->$writer($value);
         }
 
+        # reset lazy_write
         $self->lazy_write($lazy);
 
         return 1;
@@ -498,6 +504,7 @@ BEGIN {
 =head2 files
 
  $array_ref = $self->files;
+ $self->clear_files;
 
 Returns an array of L<Transmission::Torrent::File>s.
 
@@ -518,11 +525,14 @@ sub _build_files {
     $data = $self->client->rpc('torrent-get' =>
                 ids => [ $self->id ],
                 fields => [ qw/ files fileStats / ],
-            ) or return [];
+            );
+
+    return [] unless($data);
 
     $files = $data->{'torrents'}[0]{'files'};
     $stats = $data->{'torrents'}[0]{'fileStats'};
 
+    # this has to be true: @$files == @$stats
     while(@$stats) {
         my $stats = shift @$stats or last;
         my $file = shift @$files;
