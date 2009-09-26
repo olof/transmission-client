@@ -35,25 +35,6 @@ use Transmission::Torrent;
 
 our $VERSION = '0.01';
 
-my @fields = qw/
-        activityDate addedDate announceResponse announceURL
-        comment corruptEver creator dateCreated
-        desiredAvailable doneDate downloadDir downloadedEver
-        downloaders downloadLimitMode downloadLimit error
-        errorString eta files hashString
-        haveUnchecked haveValid id isPrivate
-        lastAnnounceTime lastScrapeTime leechers leftUntilDone
-        manualAnnounceTime maxConnectedPeers name nextAnnounceTime
-        nextScrapeTime peers peersConnected peersFrom
-        peersGettingFromUs peersKnown peersSendingToUs pieceCount
-        pieceSize priorities rateDownload rateUpload
-        recheckProgress scrapeResponse scrapeURL seeders
-        sizeWhenDone startDate status swarmSpeed
-        timesCompleted trackers totalSize uploadedEver
-        uploadLimitMode uploadLimit uploadRatio wanted
-        webseeds webseedsSendingToUs
-    /;
-
 =head1 ATTRIBUTES
 
 =head2 url
@@ -184,8 +165,8 @@ around version => sub {
 sub _build_version {
     my $self = shift;
 
-    if(my $res = $self->rpc('session-get')) {
-        return $res->{'version'} || q();
+    if(my $data = $self->rpc('session-get')) {
+        return $data->{'version'} || q();
     }
 
     return q();
@@ -199,14 +180,17 @@ sub _build_version {
 
  key              | value type & description
  -----------------+-------------------------------------------------
- download_dir     | string      path to download the torrent to
- filename         | string      filename or URL of the .torrent file
- metainfo         | string      .torrent content
- paused           | 'boolean'   if true, don't start the torrent
- peer_limit       | number      maximum number of peers
+ download_dir     | string    path to download the torrent to
+ filename         | string    filename or URL of the .torrent file
+ metainfo         | string    torrent content
+ paused           | boolean   if true, don't start the torrent
+ peer_limit       | number    maximum number of peers
 
 Either "filename" or "metainfo" MUST be included. All other arguments are
 optional.
+
+See "3.4 Adding a torrent" from
+L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
 
 =cut
 
@@ -237,10 +221,13 @@ sub add {
 
  key                | value type & description
  -------------------+-------------------------------------------------
- ids                | array      torrent list, as described in 3.1
- delete_local_data  | 'boolean'  delete local data. (default: false)
+ ids                | array    torrent list, as described in 3.1
+ delete_local_data  | boolean  delete local data. (default: false)
 
 C<ids> can also be the string "all". C<ids> is required.
+
+See "3.4 Removing a torrent" from
+L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
 
 =cut
 
@@ -259,6 +246,48 @@ sub remove {
     else {
         $args{'ids'} = [$args{'ids'}] unless(ref $args{'ids'} eq 'ARRAY');
         return $self->rpc('torrent-remove', %args);
+    }
+}
+
+=head2 move
+
+ $bool = $self->move(%args);
+
+
+ string      | value type & description
+ ------------+-------------------------------------------------
+ ids         | array      torrent list, as described in 3.1
+ location    | string     the new torrent location
+ move        | boolean    if true, move from previous location.
+             |            otherwise, search "location" for files
+
+C<ids> can also be the string "all". C<ids> and C<location> is required.
+
+See "3.5 moving a torrent" from
+L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+
+=cut
+
+sub move {
+    my $self = shift;
+    my %args = @_;
+
+    if(!defined $args{'ids'}) {
+        $self->error("ids argument is required");
+        return;
+    }
+    if(!defined $args{'location'}) {
+        $self->error("ids argument is required");
+        return;
+    }
+
+    if($args{'ids'} eq 'all') {
+        delete $args{'ids'};
+        return $self->rpc('torrent-set-location' => %args);
+    }
+    else {
+        $args{'ids'} = [$args{'ids'}] unless(ref $args{'ids'} eq 'ARRAY');
+        return $self->rpc('torrent-set-location', %args);
     }
 }
 
@@ -345,10 +374,13 @@ sub torrents {
     my %args = @_;
     my $list;
 
-    $args{'fields'} ||= \@fields;
+    $args{'fields'} ||= [
+        keys %Transmission::Torrent::READ,
+        keys %Transmission::Torrent::BOTH,
+    ];
 
-    if(my $res = $self->rpc('torrent-get' => %args)) {
-        $list = $res->{'torrents'};
+    if(my $data = $self->rpc('torrent-get' => %args)) {
+        $list = $data->{'torrents'};
     }
     else {
         return;
@@ -390,93 +422,6 @@ sub _translate_status {
     return 'seeding'     if($_[0] == 8);
     return 'stopped'     if($_[0] == 16);
     return $_[0];
-}
-
-=head2 encryption
-
- $str = $self->encryption;
-
-Can be: "required", "preferred" or "tolerated".
-
-=head2 download_dir
-
- $str = $self->download_dir;
-
-Default path to download torrents
-
-=head2 peer_limit
-
- $int = $self->peer_limit;
-
-
-
-=head2 pex_allowed
-
- ?? = $self->pex_allowed;
-
-=head2 port
-
- $int = $self->port;
-
-=head2 port_forwarding_enabled
-
- $bool = $self->port_forwarding_enabled;
-
-=head2 speed_limit_down
-
- $int = $self->speed_limit_down;
-
-=head2 speed_limit_down_enabled
-
- $bool = $self->speed_limit_down_enabled;
-
-=head2 speed_limit_up
-
- $int = $self->speed_limit_up;
-
-=head2 speed_limit_up_enabled
-
- $bool = $self->speed_limit_up_enabled;
-
-=cut
-
-{
-    my $meta = __PACKAGE__->meta;
-    my @session = qw/encryption download_dir peer_limit pex_allowed
-                    port port_forwarding_enabled
-                    speed_limit_down speed_limit_down_enabled
-                    speed_limit_up speed_limit_up_enabled/;
-    my @stats = qw/active_torrent_count download_speed
-                    paused_torrent_count torrent_count upload_speed/;
-
-    no strict 'refs';
-
-    for my $sub (@session) {
-        (my $key = $sub) =~ tr/_/-/;
-
-        $meta->add_method($sub => sub {
-            my $self = shift;
-            my $val  = shift;
-
-            if(defined $val) {
-                return $self->rpc('session-set', $key => $val);
-            }
-            elsif(my $res = $self->rpc('session-get')) {
-                return $res->{$key};
-            }
-
-            return;
-        });
-    }
-
-    for my $sub (@stats) {
-        (my $key = $sub) =~ s/_(\w)/{uc $1}/ge;
-
-        $meta->add_method($sub => sub {
-            my $res = shift->rpc('session-stats');
-            return $res ? $res->{'session-stats'}{$key} : undef;
-        });
-    }
 }
 
 =head2 stats
