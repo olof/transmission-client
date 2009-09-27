@@ -26,6 +26,7 @@ Returns a L<Transmission::Client> object.
 has client => (
     is => 'ro',
     isa => 'Object',
+    handles => { client_error => 'error' },
 );
 
 =head2 lazy_write
