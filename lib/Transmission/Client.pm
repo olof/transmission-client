@@ -297,7 +297,15 @@ L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
 =cut
 
 sub remove {
-    return shift->_do_ids_action('torrent-remove' => @_);
+    my $self = shift;
+
+    if($self->_do_ids_action('torrent-remove' => @_)) {
+        $self->clear_torrents; # torrent list might be out of sync
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }
 
 =head2 move
@@ -386,7 +394,7 @@ sub _do_ids_action {
         }
     }
 
-    return $self->rpc($method, %args);
+    return $self->rpc($method, %args) ? 1 : 0;
 }
 
 =head2 read_torrents
