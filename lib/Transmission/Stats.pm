@@ -56,6 +56,11 @@ BEGIN {
             isa => $both{$camel},
             coerce => 1,
             writer => "_set_$name",
+            lazy => 1,
+            default => sub {
+                $_[0]->read_all;
+                $_[0]->$name;
+            },
         );
     }
 
@@ -64,12 +69,14 @@ BEGIN {
         my $lazy = $self->lazy_write;
         my $data;
 
-        $data = $self->client->rpc('session-get') or return;
+        $data = $self->client->rpc('session-stats') or return;
 
         $self->lazy_write(1);
 
-        for my $camel (keys %$data) {
-            (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
+        for my $camel (keys %both) {
+            my $name = __PACKAGE__->_camel2Normal($camel);
+            my $writer = "_set_$name";
+            $self->$writer($data->{$camel});
         }
 
         $self->lazy_write($lazy);
