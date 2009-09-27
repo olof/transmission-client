@@ -244,6 +244,18 @@ BEGIN {
     });
 }
 
+=head1 METHODS
+
+=head2 error
+
+Proxy method for L<Transmission::Client::error()>.
+
+=cut
+
+sub error {
+    shift->client->error;
+}
+
 =head1 LICENSE
 
 =head1 AUTHOR

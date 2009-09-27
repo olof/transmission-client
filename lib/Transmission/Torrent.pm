@@ -436,7 +436,7 @@ BEGIN {
                            );
 
                 return unless($data);
-                return "$data->{'torrents'}[0]{$camel}";
+                return $data->{'torrents'}[0]{$camel};
             },
         );
     }
@@ -456,7 +456,8 @@ BEGIN {
                            );
 
                 return unless($data);
-                return "$data->{'torrents'}[0]{$camel}";
+                return unless($data->{'torrent'}[0]);
+                return $data->{'torrents'}[0]{$camel};
             },
         );
     }
@@ -582,6 +583,16 @@ L<Transmission::Client::verify()>.
             $_[0]->client->$name(ids => $_[0]->id);
         });
     }
+}
+
+=head2 error
+
+Proxy method for L<Transmission::Client::error()>.
+
+=cut
+
+sub error {
+    shift->client->error;
 }
 
 =head1 LICENSE
