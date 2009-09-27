@@ -90,17 +90,6 @@ sub _normal2Camel {
     return $_;
 }
 
-# no in use
-# could probably be turned into MooseX::Type
-sub _translate_status {
-    return 'queued'      if($_[0] == 1);
-    return 'checking'    if($_[0] == 2);
-    return 'downloading' if($_[0] == 4);
-    return 'seeding'     if($_[0] == 8);
-    return 'stopped'     if($_[0] == 16);
-    return $_[0];
-}
-
 =head1 LICENSE
 
 =head1 AUTHOR
