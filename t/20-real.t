@@ -28,3 +28,5 @@ is(int(@_ = $obj->read_torrents(ids => 1)), 1, "->read_torrents with ids");
 
 # at the end...
 ok($obj->read_all, "data is refreshed");
+
+#print $obj->dump;
