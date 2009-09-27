@@ -550,7 +550,7 @@ sub read_all {
 
     $self->session->read_all;
     $self->stats->read_all;
-    $self->read_torrents(eager_read => 1);
+    () = $self->read_torrents(eager_read => 1);
 
     return 1;
 }
