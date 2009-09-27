@@ -53,6 +53,7 @@ use Transmission::Torrent;
 use Transmission::Session;
 
 our $VERSION = '0.01';
+our $SESSION_ID_HEADER_NAME = 'X-Transmission-Session-Id';
 
 with 'Transmission::AttributeRole';
 
@@ -218,10 +219,22 @@ sub _build_version {
     return q();
 }
 
-has _session_id => (
+=head2 session_id
+
+ $self->session_id($str);
+ $str = $self->session_id;
+
+The session ID used to communicate with Transmission.
+
+=cut
+
+has session_id => (
     is => 'rw',
     isa => 'Str',
     default => '',
+    trigger => sub {
+        $_[0]->_ua->default_header($SESSION_ID_HEADER_NAME => $_[1]);
+    },
 );
 
 =head1 METHODS
@@ -483,7 +496,6 @@ sub rpc {
     my $method = shift or return;
     my %args = @_;
     my $nested = delete $args{'_nested'}; # internal flag
-    my $session_header_name = 'X-Transmission-Session-Id';
     my($tag, $res, $post);
 
     $self->_translateCamel(\%args);
@@ -499,13 +511,11 @@ sub rpc {
                 arguments => \%args,
             });
 
-    $self->_ua->default_header($session_header_name => $self->_session_id);
-
     $res = $self->_ua->post($self->url, Content => $post);
 
     unless($res->is_success) {
         if($res->code == 409 and !$nested) {
-            $self->_session_id($res->header($session_header_name));
+            $self->session_id($res->header($SESSION_ID_HEADER_NAME));
             return $self->rpc($method => %args, _nested => 1);
         }
         $self->error($res->status_line);
