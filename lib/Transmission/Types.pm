@@ -19,7 +19,7 @@ subtype string, as Str;
 coerce string, from Any, via { '' };
 
 subtype boolean, as Bool;
-coerce boolean, from Object, via { "$_" };
+coerce boolean, from Object, via { int $_ };
 
 subtype array, as ArrayRef;
 coerce array, from Any, via { [] };
