@@ -406,7 +406,7 @@ sub _do_ids_action {
  ------------+-------------------------------------------------
  ids         | array      torrent list, as described in 3.1
              |            this is optional
- eager_read  | will create objects with as much data as possible.
+ lazy_read   | will create objects with as little data as possible.
 
 =over 4
 
@@ -429,14 +429,14 @@ sub read_torrents {
     my $list;
 
     # set fields
-    if($args{'eager_read'}) {
+    if($args{'lazy_read'}) {
+        $args{'fields'} = [qw/id/];
+    }
+    else {
         $args{'fields'} = [
             keys %Transmission::Torrent::READ,
             keys %Transmission::Torrent::BOTH,
         ];
-    }
-    else {
-        $args{'fields'} = [qw/id/];
     }
 
     # set ids
@@ -543,7 +543,7 @@ sub read_all {
 
     $self->session->read_all;
     $self->stats->read_all;
-    () = $self->read_torrents(eager_read => 1);
+    () = $self->read_torrents;
 
     return 1;
 }
