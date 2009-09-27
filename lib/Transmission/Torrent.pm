@@ -585,6 +585,30 @@ L<Transmission::Client::verify()>.
     }
 }
 
+=head2 move
+
+ $bool = $self->move($path);
+
+Will move the torrent content to C<$path>.
+
+=cut
+
+sub move {
+    my $self = shift;
+    my $path = shift;
+
+    unless($path) {
+        $self->client_error("Required argument 'path' is missing");
+        return;
+    }
+
+    return $self->client->move(
+        ids => [$seld->id],
+        location => $path,
+        move => 1,
+    );
+}
+
 =head1 LICENSE
 
 =head1 AUTHOR
