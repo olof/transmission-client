@@ -7,6 +7,9 @@ Transmission::Torrent::File
 =cut
 
 use Moose;
+use Transmission::Types ':all';
+
+with 'Transmission::AttributeRole';
 
 =head1 ATTRIBUTES
 
@@ -37,20 +40,20 @@ use Moose;
 =cut
 
 {
-    my %read = qw/
-        key             Str
-        length          Num
-        name            Str
-        bytesCompleted  Num
-        wanted          Bool
-        priority        Num
-    /;
+    my %read = (
+        key             => string,
+        length          => number,
+        name            => string,
+        bytesCompleted  => number,
+        wanted          => boolean,
+        priority        => number,
+    );
 
     for my $camel (keys %read) {
-        (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
+        my $name = __PACKAGE__->_camel2Normal($camel);
         has $name => (
             is => 'ro',
-            isa => "Maybe[$read{$camel}]",
+            isa => $read{$camel},
             writer => "_set_$name",
         );
     }
@@ -67,10 +70,8 @@ sub BUILDARGS {
     my $args = $self->SUPER::BUILDARGS(@_);
 
     for my $camel (keys %$args) {
-        (my $key = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
-        $args->{$key} = "" .delete $args->{$camel};
-        $args->{$key} = 1 if($args->{$key} eq 'true');
-        $args->{$key} = 0 if($args->{$key} eq 'false');
+        my $key = __PACKAGE__->_camel2Normal($camel);
+        $args->{$key} = delete $args->{$camel};
     }
 
     return $args;
