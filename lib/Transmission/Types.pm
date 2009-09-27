@@ -10,13 +10,13 @@ use MooseX::Types -declare => [qw/number double string boolean array/];
 use MooseX::Types::Moose ':all';
 
 subtype number, as Num;
-coerce number, from Any, via { 0 };
+coerce number, from Any, via { -1 };
 
 subtype double, as Num;
-coerce double, from Any, via { 0 };
+coerce double, from Any, via { -1 };
 
 subtype string, as Str;
-coerce string, from Any, via { '' };
+coerce string, from Any, via { defined $_ ? "$_" : "__UNDEF__" };
 
 subtype boolean, as Bool;
 coerce boolean, from Object, via { int $_ };
