@@ -54,6 +54,7 @@ with 'Transmission::AttributeRole';
         has $name => (
             is => 'ro',
             isa => $read{$camel},
+            coerce => 1,
             writer => "_set_$name",
         );
     }
