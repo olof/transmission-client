@@ -64,34 +64,34 @@ has eager_read => (
 
 # this method name exists to prove a point - not to be readable...
 sub _camel2Normal {
-    shift;
-    local $_ = shift;
-    tr/_/-/;
-    s/([A-Z]+)/{ "_" .lc($1) }/ge;
-    return $_;
-}
+    if(ref $_[1] eq 'HASH') {
+        for my $camel (keys %{ $_[1] }) {
+            my $key = __PACKAGE__->_camel2Normal($camel);
 
-# this method name exists to prove a point - not to be readable...
-sub _translateCamel {
-    my $self = shift;
-    my $h = shift;
+            if(ref $_[1]->{$camel} eq 'HASH') {
+                __PACKAGE__->_camel2Normal($_[1]->{$camel});
+            }
 
-    for my $camel (keys %$h) {
-        my $key = $self->_camel2Normal($camel);
-
-        if(my $tr = $self->can("_translate_$key")) {
-            $h->{$key} = $tr->( delete $h->{$camel} );
+            $_[1]->{$key} = delete $_[1]->{$camel};
         }
-        else {
-            $h->{$key} = delete $h->{$camel};
-        }
-
-        if(ref $h->{$key} eq 'HASH') {
-            $self->_translateCamel($h->{$key});
-        }
+    }
+    else {
+        local $_ = $_[1];
+        tr/-/_/;
+        s/([A-Z]+)/{ "_" .lc($1) }/ge;
+        return $_;
     }
 }
 
+sub _normal2Camel {
+    local $_ = $_[1];
+    tr/_/-/;
+    s/_(\w)/{ uc($1) }/ge; # wild guess...
+    return $_;
+}
+
+# no in use
+# could probably be turned into MooseX::Type
 sub _translate_status {
     return 'queued'      if($_[0] == 1);
     return 'checking'    if($_[0] == 2);

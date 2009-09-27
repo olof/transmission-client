@@ -17,7 +17,9 @@ use Moose;
 use Transmission::Types ':all';
 use Transmission::Stats;
 
-with 'Transmission::AttributeRole';
+BEGIN {
+    with 'Transmission::AttributeRole';
+}
 
 =head1 ATTRIBUTES
 
@@ -206,7 +208,7 @@ BEGIN {
     );
 
     for my $camel (keys %both) {
-        (my $name = $camel) =~ s/-/_/g;
+        my $name = __PACKAGE__->_camel2Normal($camel);
         has $name => (
             is => 'rw',
             isa => $both{$camel},
@@ -228,13 +230,8 @@ BEGIN {
         $self->lazy_write(1);
 
         for my $camel (keys %both) {
-            (my $name = $camel) =~ s/-/_/g;
-            my $value = $data->{$camel};
-
-            $value = 1 if($value eq 'true');
-            $value = 0 if($value eq 'false');
-
-            $self->$name($value);
+            my $name = __PACKAGE__->_camel2Normal($camel);
+            $self->$name($data->{$camel});
         }
 
         $self->lazy_write($lazy);

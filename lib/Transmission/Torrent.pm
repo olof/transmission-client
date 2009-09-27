@@ -545,7 +545,7 @@ sub BUILDARGS {
     my $self = shift;
     my $args = $self->SUPER::BUILDARGS(@_);
 
-    $self->_translateCamel($args);
+    $self->_camel2Normal($args);
 
     return $args;
 }
