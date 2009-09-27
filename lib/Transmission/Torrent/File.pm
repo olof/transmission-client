@@ -26,7 +26,7 @@ use Moose;
 
  $num = $self->bytes_completed;
 
-=heaa2 wanted
+=head2 wanted
 
  $bool = $self->wanted;
 
