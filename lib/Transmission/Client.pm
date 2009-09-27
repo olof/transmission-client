@@ -297,21 +297,7 @@ L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
 =cut
 
 sub remove {
-    my $self = shift;
-    my %args = @_;
-
-    if(!defined $args{'ids'}) {
-        $self->error("ids argument is required");
-        return;
-    }
-    elsif($args{'ids'} eq 'all') {
-        delete $args{'ids'};
-        return $self->rpc('torrent-remove' => %args);
-    }
-    else {
-        $args{'ids'} = [$args{'ids'}] unless(ref $args{'ids'} eq 'ARRAY');
-        return $self->rpc('torrent-remove', %args);
-    }
+    return shift->_do_ids_action('torrent-remove' => @_);
 }
 
 =head2 move
@@ -337,23 +323,12 @@ sub move {
     my $self = shift;
     my %args = @_;
 
-    if(!defined $args{'ids'}) {
-        $self->error("ids argument is required");
-        return;
-    }
     if(!defined $args{'location'}) {
         $self->error("ids argument is required");
         return;
     }
 
-    if($args{'ids'} eq 'all') {
-        delete $args{'ids'};
-        return $self->rpc('torrent-set-location' => %args);
-    }
-    else {
-        $args{'ids'} = [$args{'ids'}] unless(ref $args{'ids'} eq 'ARRAY');
-        return $self->rpc('torrent-set-location', %args);
-    }
+    return $self->_do_ids_action('torrent-set-location' => %args);
 }
 
 =head2 start
@@ -392,30 +367,26 @@ sub verify {
 }
 
 sub _do_ids_action {
-    my $self   = shift;
+    my $self = shift;
     my $method = shift;
+    my %args = @_ == 1 ? (ids => $_[0]) : @_;
     my $ids;
 
-    # hack to provide an uniform api
-    if(@_ % 2 == 0) {
-        my %args = @_;
-        $ids = $args{'ids'};
-    }
-    else {
-        $ids = $_[0];
-    }
-
-    if(!defined $ids) {
-        $self->error("ids argument is required");
+    unless(defined $args{'ids'}) {
+        $self->error('ids is required as argument');
         return;
     }
-    elsif($ids eq 'all') {
-        return $self->rpc($method);
+
+    unless(ref $args{'ids'} eq 'ARRAY') {
+        if($args{'ids'} eq 'all') {
+            delete $args{'ids'};
+        }
+        else {
+            $args{'ids'} = [$args{'ids'}];
+        }
     }
-    else {
-        $ids = [$ids] unless(ref $ids eq 'ARRAY');
-        return $self->rpc($method, ids => $ids);
-    }
+
+    return $self->rpc($method, %args);
 }
 
 =head2 read_torrents
@@ -511,6 +482,7 @@ sub rpc {
 
     $self->_translateCamel(\%args);
 
+    # make sure ids are numeric
     if(ref $args{'ids'} eq 'ARRAY') {
         $_ += 0 for(@{ $args{'ids'} });
     }
@@ -543,6 +515,8 @@ sub rpc {
         $self->error($res->{'result'});
         return;
     }
+
+    $self->error("");
 
     return $res->{'arguments'};
 }
