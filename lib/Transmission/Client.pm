@@ -457,8 +457,8 @@ sub read_torrents {
         $torrent = Transmission::Torrent->new(
                         client => $self,
                         id => $torrent->{'id'},
+                        %$torrent,
                    );
-        $torrent->read_all($torrent);
     }
 
     if(wantarray) {
@@ -481,10 +481,12 @@ Communicate with backend. This methods is meant for internal use.
 sub rpc {
     my $self = shift;
     my $method = shift or return;
-    my %args = $self->_translate_keys(@_);
+    my %args = @_;
     my $nested = delete $args{'_nested'}; # internal flag
     my $session_header_name = 'X-Transmission-Session-Id';
     my($tag, $res, $post);
+
+    $self->_translateCamel(\%args);
 
     if(ref $args{'ids'} eq 'ARRAY') {
         $_ += 0 for(@{ $args{'ids'} });

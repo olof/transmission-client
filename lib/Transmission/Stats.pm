@@ -12,6 +12,7 @@ L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
 =cut
 
 use Moose;
+use Transmission::Types ':all';
 
 with 'Transmission::AttributeRole';
 
@@ -40,19 +41,20 @@ with 'Transmission::AttributeRole';
 =cut
 
 BEGIN {
-    my %both = qw/
-        activeTorrentCount  Num
-        downloadSpeed       Num
-        pausedTorrentCount  Num
-        torrentCount        Num
-        uploadSpeed         Num
-    /;
+    my %both = (
+        activeTorrentCount  => number,
+        downloadSpeed       => number,
+        pausedTorrentCount  => number,
+        torrentCount        => number,
+        uploadSpeed         => number,
+    );
 
     for my $camel (keys %both) {
         (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
         has $name => (
             is => 'ro',
-            isa => "Maybe[$both{$camel}]",
+            isa => $both{$camel},
+            coerce => 1,
             writer => "_set_$name",
         );
     }

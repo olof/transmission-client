@@ -13,8 +13,6 @@ It requires the consuming class to provide the method C<read_all()>.
 
 use Moose::Role;
 
-requires 'read_all';
-
 =head1 ATTRIBUTES
 
 =head2 client
@@ -63,18 +61,28 @@ has eager_read => (
     trigger => sub { $_[0]->read_all if($_[1]) },
 );
 
+# this method name exists to prove a point - not to be readable...
+sub _camel2Normal {
+    shift;
+    local $_ = shift;
+    tr/_/-/;
+    s/([A-Z]+)/{ "_" .lc($1) }/ge;
+    return $_;
+}
+
+# this method name exists to prove a point - not to be readable...
 sub _translateCamel {
     my $self = shift;
-    my $h    = shift;
+    my $h = shift;
 
-    for(keys %$h) {
-        (my $key = $_) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
+    for my $camel (keys %$h) {
+        my $key = $self->_camel2Normal($camel);
 
         if(my $tr = $self->can("_translate_$key")) {
-            $h->{$key} = $tr->( delete $h->{$_} );
+            $h->{$key} = $tr->( delete $h->{$camel} );
         }
         else {
-            $h->{$key} = delete $h->{$_};
+            $h->{$key} = delete $h->{$camel};
         }
 
         if(ref $h->{$key} eq 'HASH') {
@@ -90,19 +98,6 @@ sub _translate_status {
     return 'seeding'     if($_[0] == 8);
     return 'stopped'     if($_[0] == 16);
     return $_[0];
-}
-
-sub _translate_keys {
-    my $self = shift;
-    my %args = @_;
-
-    for my $orig (keys %args) {
-        my $new = $orig;
-        $new =~ tr/_/-/;
-        $args{$new} = delete $args{$orig};
-    }
-
-    return %args;
 }
 
 =head1 LICENSE

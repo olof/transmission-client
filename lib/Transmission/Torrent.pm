@@ -19,10 +19,13 @@ L<Transmission::AttributeRole>
 
 use Moose;
 use Transmission::Torrent::File;
+use Transmission::Types ':all';
 
 our(%READ, %BOTH); # these variables are meant for internal usage
 
-with 'Transmission::AttributeRole';
+BEGIN {
+    with 'Transmission::AttributeRole';
+}
 
 =head1 ATTRIBUTES
 
@@ -283,7 +286,7 @@ True if "upload_limit" is honored
 
 =head2 status
 
- $num = $self->status;
+ $str = $self->status;
 
 =head2 swarm_speed
 
@@ -324,85 +327,86 @@ True if "upload_limit" is honored
 =cut
 
 BEGIN {
-    my %set = qw/
-        files-wanted          ArrayRef
-        files-unwanted        ArrayRef
-        location              Str
-        peer-limit            Num
-        priority-high         ArrayRef
-        priority-low          ArrayRef
-        priority-normal       ArrayRef
-    /;
-    %BOTH = qw/
-        bandwidthPriority     Num
-        downloadLimit         Num
-        downloadLimited       Bool
-        honorsSessionLimits   Bool
-        seedRatioLimit        Num
-        seedRatioMode         Num
-        uploadLimit           Num
-        uploadLimited         Bool
-    /;
-    %READ = qw/
-        activityDate                Num
-        addedDate                   Num
-        comment                     Str
-        corruptEver                 Num
-        creator                     Str
-        dateCreated                 Num
-        desiredAvailable            Num
-        doneDate                    Num
-        downloadDir                 Str
-        downloadedEver              Num
-        downloaders                 Num
-        error                       Num
-        errorString                 Str
-        eta                         Num
-        hashString                  Str
-        haveUnchecked               Num
-        haveValid                   Num
-        isPrivate                   Bool
-        leechers                    Num
-        leftUntilDone               Num
-        manualAnnounceTime          Num
-        maxConnectedPeers           Num
-        name                        Str
-        peersConnected              Num
-        peersGettingFromUs          Num
-        peersKnown                  Num
-        peersSendingToUs            Num
-        percentDone                 Num
-        pieceCount                  Num
-        pieceSize                   Num
-        rateDownload                Num
-        rateUpload                  Num
-        recheckProgress             Num
-        seeders                     Num
-        sizeWhenDone                Num
-        startDate                   Num
-        status                      Num
-        swarmSpeed                  Num
-        timesCompleted              Num
-        totalSize                   Num
-        torrentFile                 Str
-        uploadedEver                Num
-        uploadRatio                 Num
-        webseedsSendingToUs         Num
-    /;
-        #peers                       ArrayRef
-        #peersFrom                   Object
-        #pieces                      Str
-        #priorities                  ArrayRef
-        #trackers                    ArrayRef
-        #trackerStats                ArrayRef
-        #wanted                      ArrayRef
-        #webseeds                    ArrayRef
+    my %set = (
+        'files-wanted'          => array,
+        'files-unwanted'        => array,
+        'location'              => string,
+        'peer-limit'            => number,
+        'priority-high'         => array,
+        'priority-low'          => array,
+        'priority-normal'       => array,
+    );
+    %BOTH = (
+        bandwidthPriority     => number,
+        downloadLimit         => number,
+        downloadLimited       => boolean,
+        honorsSessionLimits   => boolean,
+        seedRatioLimit        => number,
+        seedRatioMode         => number,
+        uploadLimit           => number,
+        uploadLimited         => boolean,
+    );
+    %READ = (
+        activityDate                => number,
+        addedDate                   => number,
+        comment                     => string,
+        corruptEver                 => number,
+        creator                     => string,
+        dateCreated                 => number,
+        desiredAvailable            => number,
+        doneDate                    => number,
+        downloadDir                 => string,
+        downloadedEver              => number,
+        downloaders                 => number,
+        error                       => number,
+        errorString                 => string,
+        eta                         => number,
+        hashString                  => string,
+        haveUnchecked               => number,
+        haveValid                   => number,
+        isPrivate                   => boolean,
+        leechers                    => number,
+        leftUntilDone               => number,
+        manualAnnounceTime          => number,
+        maxConnectedPeers           => number,
+        name                        => string,
+        peersConnected              => number,
+        peersGettingFromUs          => number,
+        peersKnown                  => number,
+        peersSendingToUs            => number,
+        percentDone                 => number,
+        pieceCount                  => number,
+        pieceSize                   => number,
+        rateDownload                => number,
+        rateUpload                  => number,
+        recheckProgress             => number,
+        seeders                     => number,
+        sizeWhenDone                => number,
+        startDate                   => number,
+        status                      => string,
+        swarmSpeed                  => number,
+        timesCompleted              => number,
+        totalSize                   => number,
+        torrentFile                 => string,
+        uploadedEver                => number,
+        uploadRatio                 => number,
+        webseedsSendingToUs         => number,
+    );
+        #peers                       => array,
+        #peersFrom                   => object,
+        #pieces                      => string,
+        #priorities                  => array,
+        #trackers                    => array,
+        #trackerStats                => array,
+        #wanted                      => array,
+        #webseeds                    => array,
 
     for my $camel (keys %set) {
-        (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
+        my $name = __PACKAGE__->_camel2Normal($camel);
         has $name => (
             is => 'rw',
             isa => $set{$camel},
+            coerce => 1,
             trigger => sub {
                 return if($_[0]->lazy_write);
                 $_[0]->client->rpc('torrent-set' =>
@@ -413,10 +417,11 @@ BEGIN {
     }
 
     for my $camel (keys %BOTH) {
-        (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
+        my $name = __PACKAGE__->_camel2Normal($camel);
         has $name => (
             is => 'rw',
-            isa => "Maybe[$BOTH{$camel}]",
+            isa => $BOTH{$camel},
+            coerce => 1,
             lazy => 1,
             trigger => sub {
                 return if($_[0]->lazy_write);
@@ -431,16 +436,17 @@ BEGIN {
                            );
 
                 return unless($data);
-                return $data->{'torrents'}[0]{$camel};
+                return "$data->{'torrents'}[0]{$camel}";
             },
         );
     }
 
     for my $camel (keys %READ) {
-        (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
+        my $name = __PACKAGE__->_camel2Normal($camel);
         has $name => (
             is => 'ro',
-            isa => "Maybe[$READ{$camel}]",
+            isa => $READ{$camel},
+            coerce => 1,
             writer => "_set_$name",
             lazy => 1,
             default => sub {
@@ -450,49 +456,31 @@ BEGIN {
                            );
 
                 return unless($data);
-                return $data->{'torrents'}[0]{$camel};
+                return "$data->{'torrents'}[0]{$camel}";
             },
         );
     }
 
     __PACKAGE__->meta->add_method(read_all => sub {
         my $self = shift;
-        my $data = shift; # internal use
         my $lazy = $self->lazy_write;
+        my $data;
 
-        unless($data) {
-            $data = $self->client->rpc('torrent-get' =>
-                        ids => [ $self->id ],
-                        fields => [ keys %BOTH, keys %READ ],
-                    ) or return;
+        $data = $self->client->rpc('torrent-get' =>
+                    ids => [ $self->id ],
+                    fields => [ keys %BOTH, keys %READ ],
+                ) or return;
 
-            $data = $data->{'torrents'}[0] or return;
-        }
+        $data = $data->{'torrents'}[0] or return;
 
         # prevent from fireing off trigger in attributes
         $self->lazy_write(1);
 
         for my $camel (keys %$data) {
-            (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
-            my $value = $data->{$camel};
-            my $writer;
+            my $name = __PACKAGE__->_camel2Normal($camel);
+            my $writer = $READ{$camel} ? "_set_$name" : $name;
 
-            if($BOTH{$camel}) {
-                $writer = $name;
-                $value = "$value" unless($BOTH{$camel} eq 'ArrayRef');
-            }
-            elsif($READ{$camel}) {
-                $writer = "_set_$name";
-                $value = "$value" unless($READ{$camel} eq 'ArrayRef');
-            }
-            else {
-                next;
-            }
-
-            $value = 1 if($value eq 'true');
-            $value = 0 if($value eq 'false');
-
-            $self->$writer($value);
+            $self->$writer($data->{$camel});
         }
 
         # reset lazy_write
@@ -547,6 +535,19 @@ sub _build_files {
 }
 
 =head1 METHODS
+
+=head2 BUILDARGS
+
+=cut
+
+sub BUILDARGS {
+    my $self = shift;
+    my $args = $self->SUPER::BUILDARGS(@_);
+
+    $self->_translateCamel($args);
+
+    return $args;
+}
 
 =head2 read_all
 

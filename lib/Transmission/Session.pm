@@ -14,6 +14,7 @@ This class holds data, regarding the Transmission session.
 =cut
 
 use Moose;
+use Transmission::Types ':all';
 use Transmission::Stats;
 
 with 'Transmission::AttributeRole';
@@ -178,37 +179,38 @@ true means enabled
 =cut
 
 BEGIN {
-    my %both = qw/
-        alt-speed-down             Num
-        alt-speed-enabled          Bool
-        alt-speed-time-begin       Num
-        alt-speed-time-enabled     Bool
-        alt-speed-time-end         Num
-        alt-speed-time-day         Num
-        alt-speed-up               Num
-        blocklist-enabled          Bool
-        dht-enabled                Bool
-        encryption                 Str
-        download-dir               Str
-        peer-limit-global          Num
-        peer-limit-per-torrent     Num
-        pex-enabled                Bool
-        peer-port                  Num
-        peer-port-random-on-start  Bool
-        port-forwarding-enabled    Bool
-        seedRatioLimit             Num
-        seedRatioLimited           Bool
-        speed-limit-down           Num
-        speed-limit-down-enabled   Bool
-        speed-limit-up             Num
-        speed-limit-up-enabled     Bool
-    /;
+    my %both = (
+        'alt-speed-down'             => number,
+        'alt-speed-enabled'          => boolean,
+        'alt-speed-time-begin'       => number,
+        'alt-speed-time-enabled'     => boolean,
+        'alt-speed-time-end'         => number,
+        'alt-speed-time-day'         => number,
+        'alt-speed-up'               => number,
+        'blocklist-enabled'          => boolean,
+        'dht-enabled'                => boolean,
+        'encryption'                 => string,
+        'download-dir'               => string,
+        'peer-limit-global'          => number,
+        'peer-limit-per-torrent'     => number,
+        'pex-enabled'                => boolean,
+        'peer-port'                  => number,
+        'peer-port-random-on-start'  => boolean,
+        'port-forwarding-enabled'    => boolean,
+        'seedRatioLimit'             => number,
+        'seedRatioLimited'           => boolean,
+        'speed-limit-down'           => number,
+        'speed-limit-down-enabled'   => boolean,
+        'speed-limit-up'             => number,
+        'speed-limit-up-enabled'     => boolean,
+    );
 
     for my $camel (keys %both) {
         (my $name = $camel) =~ s/-/_/g;
         has $name => (
             is => 'rw',
-            isa => "Maybe[$both{$camel}]",
+            isa => $both{$camel},
+            coerce => 1,
             trigger => sub {
                 return if($_[0]->lazy_write);
                 $_[0]->client->rpc('session-set' => $camel => $_[1]);
