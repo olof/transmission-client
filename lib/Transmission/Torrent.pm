@@ -164,7 +164,7 @@ True if "upload_limit" is honored
 
  $num = $self->error;
 
-=head2 error_str
+=head2 error_string
 
  $str = $self->error_string;
 

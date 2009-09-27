@@ -446,9 +446,10 @@ Returns an array-ref of L<Transmission::Torrent>.
 
 sub read_torrents {
     my $self = shift;
-    my %args = @_;
+    my %args = @_ == 1 ? (ids => $_[0]) : @_;
     my $list;
 
+    # set fields
     if($args{'eager_read'}) {
         $args{'fields'} = [
             keys %Transmission::Torrent::READ,
@@ -457,6 +458,16 @@ sub read_torrents {
     }
     else {
         $args{'fields'} = [qw/id/];
+    }
+
+    # set ids
+    if($args{'ids'}) {
+        if($args{'ids'} eq 'all') {
+            delete $args{'ids'};
+        }
+        elsif(ref $args{'ids'} eq "") {
+            $args{'ids'} = [ $args{'ids'} ];
+        }
     }
 
     if(my $data = $self->rpc('torrent-get' => %args)) {
