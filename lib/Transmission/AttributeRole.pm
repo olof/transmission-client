@@ -35,7 +35,7 @@ has client => (
  $self->lazy_write($bool);
 
 Will prevent writeable attributes from sending a request to Transmission.
-L</write_all()> can then be used to sync data.
+L</write_all()> can then later be used to sync data.
 
 =cut
 

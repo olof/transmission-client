@@ -2,7 +2,24 @@ package Transmission::Types;
 
 =head1 NAME
 
-Transmission::Types - Moose types
+Transmission::Types - Moose types for Transmission
+
+=head1 DESCRIPTION
+
+The types below is pretty much what you would expect them to be, execpt
+for some (maybe weird?) default values - that is for coercion from "Any".
+
+=head1 TYPES
+
+=head2 number
+
+=head2 double
+
+=head2 string
+
+=head2 boolean
+
+=head2 array
 
 =cut
 

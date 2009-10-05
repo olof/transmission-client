@@ -539,6 +539,10 @@ sub _build_files {
 
 =head2 BUILDARGS
 
+ $hash_ref = $self->BUILDARGS(\%args);
+
+Convert keys in C<%args> from "CamelCase" to "camel_case".
+
 =cut
 
 sub BUILDARGS {
@@ -565,15 +569,15 @@ This method will write all attributes in one RPC request.
 
 =head2 start
 
-L<Transmission::Client::start()>.
+See L<Transmission::Client::start()>.
 
 =head2 stop
 
-L<Transmission::Client::stop()>.
+See L<Transmission::Client::stop()>.
 
 =head2 verify
 
-L<Transmission::Client::verify()>.
+See L<Transmission::Client::verify()>.
 
 =cut
 
@@ -603,7 +607,7 @@ sub move {
     }
 
     return $self->client->move(
-        ids => [$seld->id],
+        ids => [$self->id],
         location => $path,
         move => 1,
     );

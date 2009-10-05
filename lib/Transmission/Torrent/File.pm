@@ -64,6 +64,10 @@ with 'Transmission::AttributeRole';
 
 =head2 BUILDARGS
 
+ $hash_ref = $class->BUILDARGS(\%args);
+
+Convert keys in C<%args> from "CamelCase" to "camel_case".
+
 =cut
 
 sub BUILDARGS {

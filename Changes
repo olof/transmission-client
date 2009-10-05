@@ -1,4 +1,9 @@
 Revision history for Transmission-Client
 
-0.00 Fri Sep 25 23:13:19 2009 +0200
-   - Created repo
+0.01  Mon Okt  5 20:43:19 2009 +0200
+    - can connect to deamon
+    - can retrieve session data/stats
+    - can retrieve torrent data/stats
+    - can retrieve torrent files
+    - can add torrent
+    - can execute actions on a torrent: start/stop/remove/verify

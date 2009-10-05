@@ -10,11 +10,24 @@ Transmission::Client - Interface to Transmission
 
 =head1 DESCRIPTION
 
+L<Transmission::Client> is the main module in a collection of modules to
+communicate with Transmission. Transmission is:
+
+ Transmission is a cross-platform BitTorrent client that is:
+  * Easy
+  * Lean
+  * Native
+  * Powerful
+  * Free
+
+If you want to communicate with "transmission-daemon", this is a module
+which can help you with that.
+
 The documentation is half copy/paste from the Transmission RPC spec:
 L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
 
 This module differs from L<P2P::Transmission> in (at least) two ways:
-This one use L<Moose> and it won't die or confess, which is especially
+This one use L<Moose> and it won't die. The latter is especially
 annoying in the constructor.
 
 =head1 SYNOPSIS
@@ -40,6 +53,9 @@ annoying in the constructor.
 =head1 SEE ALSO
 
 L<Transmission::AttributeRole>
+L<Transmission::Session>
+L<Transmission::Torrent>
+L<Transmission::Utils>
 
 =cut
 
