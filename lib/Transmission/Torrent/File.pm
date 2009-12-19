@@ -13,13 +13,25 @@ with 'Transmission::AttributeRole';
 
 =head1 ATTRIBUTES
 
-=head2 key
+=head2 id
 
- $str = $self->key;
+ $int = $self->id;
+
+This file index in the files list.
+
+=cut
+
+has id => (
+    is => 'ro',
+    isa => 'Int',
+    default => -1,
+);
 
 =head2 length
 
  $num = $self->length;
+
+File size in bytes.
 
 =head2 name
 
@@ -29,15 +41,37 @@ with 'Transmission::AttributeRole';
 
  $num = $self->bytes_completed;
 
+Bytes downloaded.
+
 =head2 wanted
 
  $bool = $self->wanted;
 
-=head2 priority
-
- $num = $self->priority;
+Flag which decides if this file will be downloaded or not.
 
 =cut
+
+has wanted => (
+    is => 'rw',
+    isa => boolean,
+    coerce => 1,
+    default => 1,
+);
+
+=head2 priority
+
+ $int = $self->priority;
+
+Low, Normal or High, with the respectable values: -1, 0 and 1.
+
+=cut
+
+has priority => (
+    is => 'rw',
+    isa => number,
+    coerce => 1,
+    default => 0,
+);
 
 {
     my %read = (
@@ -45,8 +79,6 @@ with 'Transmission::AttributeRole';
         length          => number,
         name            => string,
         bytesCompleted  => number,
-        wanted          => boolean,
-        priority        => number,
     );
 
     for my $camel (keys %read) {

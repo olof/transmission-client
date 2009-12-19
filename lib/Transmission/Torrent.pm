@@ -21,8 +21,6 @@ use Moose;
 use Transmission::Torrent::File;
 use Transmission::Types ':all';
 
-our(%READ, %BOTH); # these variables are meant for internal usage
-
 BEGIN {
     with 'Transmission::AttributeRole';
 }
@@ -327,16 +325,41 @@ True if "upload_limit" is honored
 =cut
 
 BEGIN {
-    my %set = (
-        'files-wanted'          => array,
-        'files-unwanted'        => array,
+    my $create_setter = sub {
+        my $camel = $_[0];
+
+        return sub {
+            return if($_[0]->lazy_write);
+            $_[0]->client->rpc('torrent-set' =>
+                ids => [ $_[0]->id ], $camel => $_[1],
+            );
+        };
+    };
+
+    my $create_getter = sub {
+        my $camel = $_[0];
+
+        return sub {
+            my $data = $_[0]->client->rpc('torrent-get' =>
+                            ids => [ $_[0]->id ],
+                            fields => [ $camel ],
+                        );
+
+            return unless($data);
+            return $data->{'torrents'}[0]{$camel};
+        };
+    };
+
+    my %SET = (
+        #'files-wanted'          => array,
+        #'files-unwanted'        => array,
         'location'              => string,
         'peer-limit'            => number,
-        'priority-high'         => array,
-        'priority-low'          => array,
-        'priority-normal'       => array,
+        #'priority-high'         => array,
+        #'priority-low'          => array,
+        #'priority-normal'       => array,
     );
-    %BOTH = (
+    our %BOTH = ( # meant for internal usage
         bandwidthPriority     => number,
         downloadLimit         => number,
         downloadLimited       => boolean,
@@ -346,7 +369,7 @@ BEGIN {
         uploadLimit           => number,
         uploadLimited         => boolean,
     );
-    %READ = (
+    our %READ = ( # meant for internal usage
         activityDate                => number,
         addedDate                   => number,
         comment                     => string,
@@ -401,64 +424,48 @@ BEGIN {
         #wanted                      => array,
         #webseeds                    => array,
 
-    for my $camel (keys %set) {
+    for my $camel (keys %SET) {
         my $name = __PACKAGE__->_camel2Normal($camel);
+        my $setter = $create_setter->($camel);
+
+        __PACKAGE__->meta->add_method("write_$name" => $setter);
+
         has $name => (
             is => 'rw',
-            isa => $set{$camel},
+            isa => $SET{$camel},
             coerce => 1,
-            trigger => sub {
-                return if($_[0]->lazy_write);
-                $_[0]->client->rpc('torrent-set' =>
-                    ids => [ $_[0]->id ], $camel => $_[1],
-                );
-            },
+            trigger => $setter,
         );
     }
 
     for my $camel (keys %BOTH) {
         my $name = __PACKAGE__->_camel2Normal($camel);
+        my $setter = $create_setter->($camel);
+        my $getter = $create_getter->($camel);
+
+        __PACKAGE__->meta->add_method("write_$name" => $setter);
+
         has $name => (
             is => 'rw',
             isa => $BOTH{$camel},
             coerce => 1,
             lazy => 1,
-            trigger => sub {
-                return if($_[0]->lazy_write);
-                $_[0]->client->rpc('torrent-set' =>
-                    ids => [ $_[0]->id ], $camel => $_[1],
-                );
-            },
-            default => sub {
-                my $data = $_[0]->client->rpc('torrent-get' =>
-                               ids => [ $_[0]->id ],
-                               fields => [ $camel ],
-                           );
-
-                return unless($data);
-                return $data->{'torrents'}[0]{$camel};
-            },
+            trigger => $setter,
+            default => $getter,
         );
     }
 
     for my $camel (keys %READ) {
         my $name = __PACKAGE__->_camel2Normal($camel);
+        my $getter = $create_getter->($camel);
+
         has $name => (
             is => 'ro',
             isa => $READ{$camel},
             coerce => 1,
             writer => "_set_$name",
             lazy => 1,
-            default => sub {
-                my $data = $_[0]->client->rpc('torrent-get' =>
-                               ids => [ $_[0]->id ],
-                               fields => [ $camel ],
-                           );
-
-                return unless($data);
-                return unless($data->{'torrent'}[0]);
-                return $data->{'torrents'}[0]{$camel};
-            },
+            default => $getter,
         );
     }
 
@@ -512,6 +519,7 @@ sub _build_files {
     my $self = shift;
     my $files = [];
     my $stats = [];
+    my $id = 0;
     my $data;
 
     $data = $self->client->rpc('torrent-get' =>
@@ -529,7 +537,10 @@ sub _build_files {
         my $stats = shift @$stats or last;
         my $file = shift @$files;
 
-        push @$files, Transmission::Torrent::File->new(%$stats, %$file);
+        push @$files,
+            Transmission::Torrent::File->new(id => $id, %$stats, %$file);
+
+        $id++;
     }
 
     return $files;
@@ -560,12 +571,6 @@ sub BUILDARGS {
 
 This method will refresh all attributes in one RPC request, while calling one
 and one attribute, results in one-and-one request.
-
-=head2 write_all
-
- $bool = $self->write_all;
-
-This method will write all attributes in one RPC request.
 
 =head2 start
 
@@ -611,6 +616,59 @@ sub move {
         location => $path,
         move => 1,
     );
+}
+
+=head2 write_wanted
+
+ $bool = $self->write_wanted;
+
+Will write "wanted" information from L</files> to transmission.
+
+=cut
+
+sub write_wanted {
+    my $self = shift;
+    my %wanted = ( wanted => [], unwanted => [] );
+    my $ok;
+
+    for my $file (@{ $self->files }) {
+        push @{ $wanted{ $file->wanted ? 'wanted' : 'unwanted' } }, $file->id;
+    }
+
+    for my $key (qw/wanted unwanted/) {
+        $self->client->rpc('torrent-set' =>
+            ids => [ $self->id ], "files-$key" => $wanted{$key}
+        ) or return;
+    }
+
+    return 1;
+}
+
+=head2 write_priority
+
+ $bool = $self->write_priority;
+
+Will write "priorty" information from L</files> to transmission.
+
+=cut
+
+sub write_priority {
+    my $self = shift;
+    my %priority = ( low => [], normal => [], high => [] );
+    my %map = ( -1 => 'low', 0 => 'normal', 1 => 'high' );
+
+    for my $file (@{ $self->files }) {
+        my $key = $map{ $file->priority } || 'normal';
+        push @{ $priority{$key} }, $file->id;
+    }
+
+    for my $key (qw/low normal high/) {
+        $self->client->rpc('torrent-set' =>
+            ids => [ $self->id ], "priority-$key" => $priority{$key}
+        ) or return;
+    }
+
+    return 1;
 }
 
 =head1 LICENSE
