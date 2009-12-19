@@ -6,7 +6,7 @@ Transmission::Client - Interface to Transmission
 
 =head1 VERSION
 
-0.01
+0.02
 
 =head1 DESCRIPTION
 
@@ -68,7 +68,7 @@ use MIME::Base64;
 use Transmission::Torrent;
 use Transmission::Session;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 our $SESSION_ID_HEADER_NAME = 'X-Transmission-Session-Id';
 
 with 'Transmission::AttributeRole';

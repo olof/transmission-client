@@ -1,5 +1,11 @@
 Revision history for Transmission-Client
 
+0.02  Sat Dec 19 21:43:19 2009 +0100
+    - Fix file->id bug: id is set
+    - Fix file->key bug: File has no "key"
+    - Add torrent->write_wanted()
+    - Add torrnte->write_priority()
+
 0.01  Mon Okt  5 20:43:19 2009 +0200
     - can connect to deamon
     - can retrieve session data/stats
