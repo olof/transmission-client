@@ -51,18 +51,35 @@ BEGIN {
 
     for my $camel (keys %both) {
         (my $name = $camel) =~ s/([A-Z]+)/{ "_" .lc($1) }/ge;
-        has $name => (
+        __PACKAGE__->meta->add_attribute($name => (
             is => 'ro',
             isa => $both{$camel},
             coerce => 1,
             writer => "_set_$name",
+            clearer => "clear_$name",
             lazy => 1,
             default => sub {
-                $_[0]->read_all;
-                $_[0]->$name;
+                my $self = shift;
+                my $val = delete $self->_tmp_store->{$name};
+
+                if(defined $val) {
+                    return $val;
+                }
+                else {
+                    $self->_clear_tmp_store;
+                    return delete $self->_tmp_store->{$name};
+                }
             },
-        );
+        ));
     }
+
+    __PACKAGE__->meta->add_attribute(_tmp_store => (
+        is => 'ro',
+        isa => 'HashRef',
+        lazy => 1,
+        builder => 'read_all',
+        clearer => '_clear_tmp_store',
+    ));
 
     __PACKAGE__->meta->add_method(read_all => sub {
         my $self = shift;

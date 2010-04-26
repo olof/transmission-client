@@ -1,8 +1,11 @@
 Revision history for Transmission-Client
 
-0.04
+0.04     Mon Apr 26 22:35:37 CEST 2010
        - Fix boolean type was true even when "false"
-       - 
+       - Fix setting of boolean data in Session attributes
+       - Add Session and Stats attributes can will build
+         its own value. The attributes can also be cleared
+         and rebuilt.
 
 0.03     Mon Apr 26 21:54:28 CEST 2010
        - Change read_all() returns fetched data in a hash

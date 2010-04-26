@@ -209,16 +209,42 @@ BEGIN {
 
     for my $camel (keys %both) {
         my $name = __PACKAGE__->_camel2Normal($camel);
-        has $name => (
+        __PACKAGE__->meta->add_attribute($name => (
             is => 'rw',
             isa => $both{$camel},
             coerce => 1,
+            lazy => 1,
+            clearer => "clear_$name",
             trigger => sub {
                 return if($_[0]->lazy_write);
-                $_[0]->client->rpc('session-set' => $camel => $_[1]);
+                $_[0]->client->rpc('session-set' => $camel =>
+                    ($both{$camel} eq boolean and $_[1])  ? 'true'
+                  : ($both{$camel} eq boolean and !$_[1]) ? 'false'
+                  :                                         $_[1]
+                );
             },
-        );
+            default => sub {
+                my $self = shift;
+                my $val = delete $self->_tmp_store->{$name};
+
+                if(defined $val) {
+                    return $val;
+                }
+                else {
+                    $self->_clear_tmp_store;
+                    return delete $self->_tmp_store->{$name};
+                }
+            },
+        ));
     }
+
+    __PACKAGE__->meta->add_attribute(_tmp_store => (
+        is => 'ro',
+        isa => 'HashRef',
+        lazy => 1,
+        builder => 'read_all',
+        clearer => '_clear_tmp_store',
+    ));
 
     __PACKAGE__->meta->add_method(read_all => sub {
         my $self = shift;
