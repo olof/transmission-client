@@ -1,25 +1,12 @@
-#!perl
-
-BEGIN {
-    use File::Find;
-    use Test::More;
-
-    my $dir = './lib';
-    my @modules;
-
-    unshift @INC, $dir;
-
-    find(sub {
-        $_ = $File::Find::name;
-        if(s, ^ $dir /? (.*) \.pm $ ,$1,x) {
-            s,/,::,g;
-            push @modules, $_;
-        }
-    }, $dir);
-
-    plan tests => int(@modules);
-
-    for my $mod (@modules) {
-        use_ok($mod);
-    }
-}
+#!/usr/bin/perl
+use lib qw(lib);
+use Test::More;
+plan tests => 8;
+use_ok('Transmission::AttributeRole');
+use_ok('Transmission::Client');
+use_ok('Transmission::Session');
+use_ok('Transmission::Stats');
+use_ok('Transmission::Torrent');
+use_ok('Transmission::Torrent::File');
+use_ok('Transmission::Types');
+use_ok('Transmission::Utils');
