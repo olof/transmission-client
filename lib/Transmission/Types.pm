@@ -35,7 +35,7 @@ coerce double, from Any, via { -1 };
 subtype string, as Str;
 coerce string, from Any, via { defined $_ ? "$_" : "__UNDEF__" };
 
-subtype boolean, as Bool;
+type boolean, where { defined $_ and $_ =~ /^(1|0)$/ };
 coerce boolean, from Object, via { int $_ };
 
 subtype array, as ArrayRef;

@@ -1,5 +1,9 @@
 Revision history for Transmission-Client
 
+0.04
+       - Fix boolean type was true even when "false"
+       - 
+
 0.03     Mon Apr 26 21:54:28 CEST 2010
        - Change read_all() returns fetched data in a hash
        - Add example script
