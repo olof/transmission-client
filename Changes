@@ -1,15 +1,19 @@
 Revision history for Transmission-Client
 
-0.02  Sat Dec 19 21:43:19 2009 +0100
-    - Fix file->id bug: id is set
-    - Fix file->key bug: File has no "key"
-    - Add torrent->write_wanted()
-    - Add torrnte->write_priority()
+0.03     Mon Apr 26 21:54:28 CEST 2010
+       - Change read_all() returns fetched data in a hash
+       - Add example script
 
-0.01  Mon Okt  5 20:43:19 2009 +0200
-    - can connect to deamon
-    - can retrieve session data/stats
-    - can retrieve torrent data/stats
-    - can retrieve torrent files
-    - can add torrent
-    - can execute actions on a torrent: start/stop/remove/verify
+0.02     Sat Dec 19 21:43:19 2009 +0100
+       - Fix file->id bug: id is set
+       - Fix file->key bug: File has no "key"
+       - Add torrent->write_wanted()
+       - Add torrnte->write_priority()
+
+0.01     Mon Okt  5 20:43:19 2009 +0200
+       - can connect to deamon
+       - can retrieve session data/stats
+       - can retrieve torrent data/stats
+       - can retrieve torrent files
+       - can add torrent
+       - can execute actions on a torrent: start/stop/remove/verify

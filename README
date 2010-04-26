@@ -2,7 +2,7 @@ NAME
     Transmission::Client - Interface to Transmission
 
 VERSION
-    0.01
+    0.03
 
 DESCRIPTION
     Transmission::Client is the main module in a collection of modules to
