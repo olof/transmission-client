@@ -186,10 +186,6 @@ True if "upload_limit" is honored
 
  $bool = $self->honors_session_limits;
 
-=head2 id
-
- $num = $self->id;
-
 =head2 is_private
 
  $bool = $self->is_private;

@@ -223,20 +223,21 @@ BEGIN {
     __PACKAGE__->meta->add_method(read_all => sub {
         my $self = shift;
         my $lazy = $self->lazy_write;
-        my $data;
+        my($rpc, %res);
 
-        $data = $self->client->rpc('session-get') or return;
+        $rpc = $self->client->rpc('session-get') or return;
 
         $self->lazy_write(1);
 
         for my $camel (keys %both) {
             my $name = __PACKAGE__->_camel2Normal($camel);
-            $self->$name($data->{$camel});
+            $res{$name} = $rpc->{$camel};
+            $self->$name($rpc->{$camel});
         }
 
         $self->lazy_write($lazy);
 
-        return 1;
+        return \%res;
  
     });
 }
