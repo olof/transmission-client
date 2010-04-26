@@ -8,7 +8,7 @@ transmission-client.pl - Alternative to transmission-remote
 
  transmission-client.pl list;
  transmission-client.pl session;
- transmission-client.pl session $key $value;
+ transmission-client.pl session $key $value;
  transmission-client.pl stats;
 
 =head1 DESCRIPTION
@@ -43,6 +43,9 @@ if($action eq 'list') {
 elsif($action eq 'session') {
     if(my $set = shift @ARGV) {
         $tc->session->$set(shift @ARGV);
+        $tc->session->${ \"clear_$set" };
+        printf "%s: %s\n", $set, $tc->session->$set;
+        print $tc->error;
     }
     else {
         my $res = $tc->session->read_all;
