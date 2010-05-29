@@ -1,5 +1,8 @@
 Revision history for Transmission-Client
 
+0.05     Sat May 29 22:27:02 CEST 2010
+       - Fix RT57970: username() and password() does not work
+
 0.04     Mon Apr 26 22:35:37 CEST 2010
        - Fix boolean type was true even when "false"
        - Fix setting of boolean data in Session attributes

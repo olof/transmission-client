@@ -6,7 +6,7 @@ Transmission::Client - Interface to Transmission
 
 =head1 VERSION
 
-0.04
+0.05
 
 =head1 DESCRIPTION
 
@@ -69,7 +69,7 @@ use Transmission::Torrent;
 use Transmission::Session;
 use constant RPC_DEBUG => $ENV{'TC_RPC_DEBUG'};
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 our $SESSION_ID_HEADER_NAME = 'X-Transmission-Session-Id';
 
 with 'Transmission::AttributeRole';
@@ -90,6 +90,26 @@ has url => (
     isa => 'Str',
     default => 'http://localhost:9091/transmission/rpc',
 );
+
+# this is subject for change!
+has _url => (
+    is => 'ro',
+    isa => 'Str',
+    lazy_build => 1,
+);
+
+sub _build__url {
+    my $self = shift;
+    my $url = $self->url;
+
+    if($self->username or $self->password) {
+        my $auth = join ':', $self->username, $self->password;
+        $url =~ s,://,://$auth@,;
+    }
+
+    return $url;
+}
+
 
 =head2 error
 
@@ -117,6 +137,7 @@ Used to authenticate against Transmission.
 has username => (
     is => 'ro',
     isa => 'Str',
+    default => '',
 );
 
 =head2 password
@@ -130,6 +151,7 @@ Used to authenticate against Transmission.
 has password => (
     is => 'ro',
     isa => 'Str',
+    default => '',
 );
 
 =head2 timeout
@@ -146,20 +168,7 @@ has _ua => (
     lazy => 1,
     handles => [qw/timeout/],
     default => sub {
-        my $self = shift;
-        my $ua = LWP::UserAgent->new;
-        my @url = split m"/+:", $self->url;
-
-        if($self->username and $self->password) {
-            $ua->credentials(
-                $url[1],
-                "Transmission RPC Server",
-                $self->username,
-                $self->password,
-            );
-        }
-
-        return $ua;
+        LWP::UserAgent->new( agent => 'Transmission-Client' );
     },
 );
 
@@ -520,7 +529,7 @@ sub rpc {
                 arguments => \%args,
             });
 
-    $res = $self->_ua->post($self->url, Content => $post);
+    $res = $self->_ua->post($self->_url, Content => $post);
 
     if(RPC_DEBUG) {
         print "post: $post\n";
