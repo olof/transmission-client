@@ -3,6 +3,8 @@ Revision history for Transmission-Client
 0.06
        - Fix RT62805: methods given to rpc() can contain both
          underscores and hyphens.
+       - Adding "autodie" to new() will make the module throw
+         exceptions, instead of silently setting "error".
 
 0.05     Sat May 29 22:27:02 CEST 2010
        - Fix RT57970: username() and password() does not work

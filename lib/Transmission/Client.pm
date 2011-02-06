@@ -50,6 +50,20 @@ annoying in the constructor.
 
  print $client->session->download_dir, "\n";
 
+=head1 FAULT HANDLING
+
+In C<0.06> L<Transmission::Client> can be constructed with "autodie" set
+to true, to make this object confess instead of just setting L</error>.
+Example:
+
+    my $client = Transmission::Client->new(autodie => 1);
+
+    eval {
+        $self->add(filename => 'foo.torrent');
+    } or do {
+        # add() failed...
+    };
+
 =head1 SEE ALSO
 
 L<Transmission::AttributeRole>
@@ -110,7 +124,6 @@ sub _build__url {
     return $url;
 }
 
-
 =head2 error
 
  $str = $self->error;
@@ -118,12 +131,23 @@ sub _build__url {
 Returns the last error known to the object. All methods can return
 empty list in addtion to what spesified. Check this attribute if so happens.
 
+Like L</autodie>? Create your object with C<autodie> set to true and this
+module will throw exceptions in addition to setting this variable.
+
 =cut
 
 has error => (
     is => 'rw',
     isa => 'Str',
     default => '',
+    trigger => sub { $_[0]->_autodie and confess $_[1] },
+);
+
+has _autodie => (
+    is => 'ro',
+    init_arg => 'autodie',
+    isa => 'Bool',
+    default => 0,
 );
 
 =head2 username
