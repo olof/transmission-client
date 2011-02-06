@@ -515,7 +515,7 @@ sub rpc {
     my $nested = delete $args{'_nested'}; # internal flag
     my($tag, $res, $post);
 
-    $self->_normal2Camel(\%args);
+    $method = $self->_normal2Camel($method);
 
     # make sure ids are numeric
     if(ref $args{'ids'} eq 'ARRAY') {
