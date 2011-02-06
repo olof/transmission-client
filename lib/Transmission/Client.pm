@@ -76,7 +76,7 @@ L<Transmission::Utils>
 use Moose;
 use DateTime;
 use DateTime::Duration;
-use JSON;
+use JSON::Any;
 use LWP::UserAgent;
 use MIME::Base64;
 use Transmission::Torrent;
@@ -85,6 +85,7 @@ use constant RPC_DEBUG => $ENV{'TC_RPC_DEBUG'};
 
 our $VERSION = '0.05';
 our $SESSION_ID_HEADER_NAME = 'X-Transmission-Session-Id';
+my $JSON = JSON::Any->new;
 
 with 'Transmission::AttributeRole';
 
@@ -140,6 +141,7 @@ has error => (
     is => 'rw',
     isa => 'Str',
     default => '',
+    clearer => '_clear_error',
     trigger => sub { $_[0]->_autodie and confess $_[1] },
 );
 
@@ -209,6 +211,7 @@ C<stats()> is a proxy method on L</session>.
 has session => (
     is => 'ro',
     lazy => 1,
+    predicate => 'has_session',
     handles => [qw/stats/],
     default => sub {
         Transmission::Session->new( client => $_[0] );
@@ -230,10 +233,14 @@ information.
 
 has torrents => (
     is => 'rw',
-    isa => 'ArrayRef',
+    traits => ['Array'],
     lazy => 1,
     clearer => "clear_torrents",
     builder => "read_torrents",
+    predicate => 'has_torrents',
+    handles => {
+        torrent_list => 'elements',
+    },
 );
 
 =head2 version
@@ -249,16 +256,6 @@ has version => (
     isa => 'Str',
     lazy_build => 1,
 );
-
-around version => sub {
-    my $next = shift;
-    my $self = shift;
-    my $version = $self->$next(@_);
-
-    $self->clear_version unless($version);
-
-    return $version || undef;
-};
 
 sub _build_version {
     my $self = shift;
@@ -319,11 +316,11 @@ sub add {
         return;
     }
     elsif($args{'filename'}) {
-        return $self->rpc('torrent-add', %args);
+        return $self->rpc('torrent-add', @_);
     }
     elsif($args{'metainfo'}) {
         $args{'metainfo'} = encode_base64($args{'metainfo'});
-        return $self->rpc('torrent-add', %args);
+        return $self->rpc('torrent-add', @_);
     }
     else {
         $self->error("Need either filename or metainfo argument");
@@ -383,7 +380,7 @@ sub move {
     my %args = @_;
 
     if(!defined $args{'location'}) {
-        $self->error("ids argument is required");
+        $self->error("location argument is required");
         return;
     }
 
@@ -481,7 +478,7 @@ sub read_torrents {
 
     # set fields
     if($args{'lazy_read'}) {
-        $args{'fields'} = [qw/id/];
+        $args{'fields'} = ['id'];
     }
     else {
         $args{'fields'} = [
@@ -547,7 +544,7 @@ sub rpc {
     }
 
     $tag  = int rand 2*16 - 1;
-    $post = to_json({
+    $post = $JSON->encode({
                 method    => $method,
                 tag       => $tag,
                 arguments => \%args,
@@ -565,11 +562,13 @@ sub rpc {
             $self->session_id($res->header($SESSION_ID_HEADER_NAME));
             return $self->rpc($method => %args, _nested => 1);
         }
-        $self->error($res->status_line);
-        return;
+        else {
+            $self->error($res->status_line);
+            return;
+        }
     }
 
-    $res = from_json($res->content);
+    $res = $JSON->decode($res->content);
 
     unless($res->{'tag'} == $tag) {
         $self->error("Tag mismatch");
@@ -580,7 +579,7 @@ sub rpc {
         return;
     }
 
-    $self->error("");
+    $self->_clear_error;
 
     return $res->{'arguments'};
 }
