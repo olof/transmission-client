@@ -7,7 +7,7 @@ Transmission::Stats - Transmission session statistics
 =head1 DESCRIPTION
 
 See "4.2 Sesion statistics" from
-L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+L<https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt>
 
 =cut
 

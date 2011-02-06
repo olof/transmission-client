@@ -7,7 +7,7 @@ Transmission::Torrent
 =head1 DESCRIPTION
 
 See "3.2 Torrent Mutators" and "3.3 Torrent accessors" from
-L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+L<https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt>
 
 This class handles data related to a torrent known to Transmission.
 

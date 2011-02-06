@@ -24,7 +24,7 @@ If you want to communicate with "transmission-daemon", this is a module
 which can help you with that.
 
 The documentation is half copy/paste from the Transmission RPC spec:
-L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+L<https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt>
 
 This module differs from L<P2P::Transmission> in (at least) two ways:
 This one use L<Moose> and it won't die. The latter is especially
@@ -303,7 +303,7 @@ Either "filename" or "metainfo" MUST be included. All other arguments are
 optional.
 
 See "3.4 Adding a torrent" from
-L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+L<https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt>
 
 =cut
 
@@ -340,7 +340,7 @@ sub add {
 C<ids> can also be the string "all". C<ids> is required.
 
 See "3.4 Removing a torrent" from
-L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+L<https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt>
 
 =cut
 
@@ -371,7 +371,7 @@ sub remove {
 C<ids> can also be the string "all". C<ids> and C<location> is required.
 
 See "3.5 moving a torrent" from
-L<http://trac.transmissionbt.com/browser/trunk/doc/rpc-spec.txt>
+L<https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt>
 
 =cut
 
