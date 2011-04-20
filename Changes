@@ -1,5 +1,9 @@
 Revision history for Transmission-Client
 
+0.0601   Wed Apr 20 12:17:43 CEST 2011
+       - Fix fail to load json, with json-any
+         http://www.cpantesters.org/cpan/report/f1e67256-36b4-11e0-afb0-adca6bb533f3
+
 0.06     Sun Feb  6 18:33:13 CET 2011
        - Fix RT62805: location to the rpc-spec is updated:
          https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt
