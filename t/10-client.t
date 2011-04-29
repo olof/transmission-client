@@ -6,7 +6,7 @@ use Transmission::Client;
 
 $SIG{'__DIE__'} = \&Carp::confess;
 
-plan tests => 41;
+plan tests => 42;
 
 my($client, $rpc_response, $rpc_request, @torrents);
 my $rpc_response_code = 409;
@@ -125,6 +125,11 @@ my $rpc_response_code = 409;
         ids => '\[42\]',
         'read_torrents() with ids',
     );
+}
+
+{ # RT#67691
+    $client->rpc(foo_bar => ids => [1,2,'foo']);
+    like($rpc_request, qr{"ids":\[1,2,"foo"\]}, 'Fix RT#67691: id "foo" is still a string');
 }
 
 TODO: {

@@ -6,7 +6,7 @@ Transmission::Client - Interface to Transmission
 
 =head1 VERSION
 
-0.0601
+0.0602
 
 =head1 DESCRIPTION
 
@@ -83,7 +83,7 @@ use Transmission::Torrent;
 use Transmission::Session;
 use constant RPC_DEBUG => $ENV{'TC_RPC_DEBUG'};
 
-our $VERSION = eval '0.0601';
+our $VERSION = eval '0.0602';
 our $SESSION_ID_HEADER_NAME = 'X-Transmission-Session-Id';
 my $JSON = JSON::Any->new;
 
@@ -540,7 +540,15 @@ sub rpc {
 
     # make sure ids are numeric
     if(ref $args{'ids'} eq 'ARRAY') {
-        $_ += 0 for(@{ $args{'ids'} });
+        for my $id (@{ $args{'ids'} }) {
+            # Need to convert string integer to "real" integer
+            #   FLAGS = (IOK,POK,pIOK,pPOK)
+            #   IV = 42
+            # ...to...
+            #   FLAGS = (PADTMP,IOK,pIOK)
+            #   IV = 42
+            $id += 0 if($id =~ /^\d+$/);
+        }
     }
 
     $tag  = int rand 2*16 - 1;
@@ -614,4 +622,6 @@ Jan Henning Thorsen
 
 =cut
 
+no MIME::Base64;
+no Moose;
 1;

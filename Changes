@@ -1,5 +1,8 @@
 Revision history for Transmission-Client
 
+0.0602   Fri Apr 29 22:18:36 CEST 2011
+       - Fix RT#67691: rpc() can now handle ids as hashes
+
 0.0601   Wed Apr 20 12:17:43 CEST 2011
        - Fix fail to load json, with json-any
          http://www.cpantesters.org/cpan/report/f1e67256-36b4-11e0-afb0-adca6bb533f3
