@@ -1,5 +1,9 @@
 Revision history for Transmission-Client
 
+0.0603
+       - Use correct var when adding torrent
+         Reference: https://rt.cpan.org/Ticket/Display.html?id=76859
+
 0.0602   Fri Apr 29 22:18:36 CEST 2011
        - Fix RT#67691: rpc() can now handle ids as hashes
 
