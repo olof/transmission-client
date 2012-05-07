@@ -316,11 +316,11 @@ sub add {
         return;
     }
     elsif($args{'filename'}) {
-        return $self->rpc('torrent-add', @_);
+        return $self->rpc('torrent-add', %args);
     }
     elsif($args{'metainfo'}) {
         $args{'metainfo'} = encode_base64($args{'metainfo'});
-        return $self->rpc('torrent-add', @_);
+        return $self->rpc('torrent-add', %args);
     }
     else {
         $self->error("Need either filename or metainfo argument");
