@@ -1,6 +1,6 @@
 Revision history for Transmission-Client
 
-0.0603
+0.0603   Mon May  7 19:29:53 2012
        - Use correct var when adding torrent
          Reference: https://rt.cpan.org/Ticket/Display.html?id=76859
 
