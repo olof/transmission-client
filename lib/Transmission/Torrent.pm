@@ -632,6 +632,9 @@ sub write_wanted {
     }
 
     for my $key (qw/wanted unwanted/) {
+        # Transmission interpret an empty list to mean all files
+        next unless @{$wanted{$key}};
+
         $self->client->rpc('torrent-set' =>
             ids => [ $self->id ], "files-$key" => $wanted{$key}
         ) or return;
