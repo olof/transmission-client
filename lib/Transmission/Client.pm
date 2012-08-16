@@ -130,7 +130,7 @@ sub _build__url {
  $str = $self->error;
  
 Returns the last error known to the object. All methods can return
-empty list in addtion to what spesified. Check this attribute if so happens.
+empty list in addition to what specified. Check this attribute if so happens.
 
 Like L</autodie>? Create your object with C<autodie> set to true and this
 module will throw exceptions in addition to setting this variable.
