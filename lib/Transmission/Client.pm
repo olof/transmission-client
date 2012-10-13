@@ -538,6 +538,10 @@ sub rpc {
 
     $method = $self->_normal2Camel($method);
 
+    # The keys need to be dashes as well
+    # _normal2Camel modifies a hashref in places
+    $self->_normal2Camel( \%args );
+
     # make sure ids are numeric
     if(ref $args{'ids'} eq 'ARRAY') {
         for my $id (@{ $args{'ids'} }) {
