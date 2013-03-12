@@ -63,7 +63,7 @@ my $rpc_response_code = 409;
     $rpc_response = '{ "tag": TAG, "result": "success", "arguments": 1 }';
     ok($client->add(filename => 'foo.torrent'), 'add() torrent by filename');
     request_has(filename => "foo.torrent", method => "torrent-add", 'add() with filename');
-    
+
     ok($client->add(metainfo => {}), 'add() torrent with metainfo');
     request_has(metainfo => undef, method => "torrent-add", 'add() with metainfo');
 }
@@ -108,7 +108,7 @@ my $rpc_response_code = 409;
     $client->read_torrents;
     request_has(
         method => 'torrent-get',
-        fields => '\["creator","uploadRatio","leechers","sizeWhenDone","recheckProgress","maxConnectedPeers","activityDate","id","swarmSpeed","peersConnected","pieceCount","torrentFile","name","isPrivate","webseedsSendingToUs","timesCompleted","addedDate","downloadedEver","downloaders","peersKnown","seeders","downloadDir","startDate","desiredAvailable","status","peersSendingToUs","peersGettingFromUs","rateDownload","corruptEver","leftUntilDone","uploadedEver","error","rateUpload","manualAnnounceTime","doneDate","totalSize","dateCreated","pieceSize","percentDone","errorString","haveValid","hashString","eta","haveUnchecked","comment","uploadLimit","downloadLimit","seedRatioMode","bandwidthPriority","downloadLimited","seedRatioLimit","uploadLimited","honorsSessionLimits"\]',
+        fields => '\[' . (join ',', sort split /,/, q|"creator","uploadRatio","leechers","sizeWhenDone","recheckProgress","maxConnectedPeers","activityDate","id","swarmSpeed","peersConnected","pieceCount","torrentFile","name","isPrivate","webseedsSendingToUs","timesCompleted","addedDate","downloadedEver","downloaders","peersKnown","seeders","downloadDir","startDate","desiredAvailable","status","peersSendingToUs","peersGettingFromUs","rateDownload","corruptEver","leftUntilDone","uploadedEver","error","rateUpload","manualAnnounceTime","doneDate","totalSize","dateCreated","pieceSize","percentDone","errorString","haveValid","hashString","eta","haveUnchecked","comment","uploadLimit","downloadLimit","seedRatioMode","bandwidthPriority","downloadLimited","seedRatioLimit","uploadLimited","honorsSessionLimits"|) . '\]',
         'read_torrents() with all fields',
     );
 
@@ -144,7 +144,7 @@ sub request_has {
     my @args = @_;
     my @failed;
 
-    unless($rpc_request =~ /"arguments":{/) {
+    unless($rpc_request =~ /"arguments":\{/) {
         push @failed, '"arguments" missing';
     }
 
@@ -152,13 +152,13 @@ sub request_has {
         my $key = shift @args;
         my $value = shift @args or last;
 
-        unless($rpc_request =~ /"arguments":{.*?"$key":/) {
+        unless($rpc_request =~ /"$key":/) {
             push @failed, qq["$key" missing];
         }
         unless(defined $value) {
             next;
         }
-        unless($rpc_request =~ /"arguments":{.*?"$key":"?$value/) {
+        unless($rpc_request =~ /"$key":"?$value/) {
             push @failed, qq["$key:$value" is missing or incorrect];
         }
     }
