@@ -481,7 +481,7 @@ sub read_torrents {
         $args{'fields'} = ['id'];
     }
     else {
-        $args{'fields'} = [
+        $args{'fields'} = [ sort
             keys %Transmission::Torrent::READ,
             keys %Transmission::Torrent::BOTH,
         ];
