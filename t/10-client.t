@@ -162,6 +162,16 @@ my $rpc_response_code = 409;
         'read_torrents() with all fields',
     );
 
+    $client->read_torrents(fields => [qw(name eta)]);
+    request_has(
+        method => 'torrent-get',
+        arguments => {
+            fields => [qw(id name eta)],
+        },
+
+        'read_torrents() with only specific fields',
+    );
+
     $client->read_torrents(lazy_read => 1);
     request_has(
         method => 'torrent-get',
