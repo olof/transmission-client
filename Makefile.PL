@@ -28,6 +28,7 @@ requires q(MIME::Base64) => 3.00;
 requires q(Moose) => 0.80;
 requires q(MooseX::Types) => 0.20;
 requires q(Sub::Exporter) => 0.95;
+requires q(List::MoreUtils) => 0;
 
 test_requires q(Test::More) => 0;
 
