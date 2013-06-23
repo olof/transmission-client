@@ -3,10 +3,9 @@ use strict;
 use lib qw(lib);
 use Test::More;
 use Transmission::Client;
+use JSON;
 
 $SIG{'__DIE__'} = \&Carp::confess;
-
-plan tests => 42;
 
 my($client, $rpc_response, $rpc_request, @torrents);
 my $rpc_response_code = 409;
@@ -62,10 +61,22 @@ my $rpc_response_code = 409;
 
     $rpc_response = '{ "tag": TAG, "result": "success", "arguments": 1 }';
     ok($client->add(filename => 'foo.torrent'), 'add() torrent by filename');
-    request_has(filename => "foo.torrent", method => "torrent-add", 'add() with filename');
-    
+    request_has(
+        arguments => {
+            filename => "foo.torrent",
+        },
+        method => "torrent-add",
+
+        'add() with filename');
+
     ok($client->add(metainfo => {}), 'add() torrent with metainfo');
-    request_has(metainfo => undef, method => "torrent-add", 'add() with metainfo');
+    request_has(
+        arguments => {
+            metainfo => undef,
+        },
+        method => "torrent-add",
+
+        'add() with metainfo');
 }
 
 { # remove, move, start, stop, verify / _do_ids_action()
@@ -86,16 +97,41 @@ my $rpc_response_code = 409;
     like($@, qr{location argument is required}, 'move() require "location"');
 
     ok($client->move(location => '/some/path', ids => 42), 'move() with location and ids');
-    request_has(method => "torrent-set-location", location => '/some/path', ids => '\[42\]', 'move() does rpc method torrent-set-location');
+    request_has(
+        method => "torrent-set-location",
+        arguments => {
+            location => '/some/path',
+            ids => [42],
+        },
+
+        'move() does rpc method torrent-set-location');
 
     ok($client->start(ids => 42), 'start() with location and ids');
-    request_has(method => "torrent-start", ids => '\[42\]', 'start() does rpc method torrent-start');
+    request_has(
+        method => "torrent-start",
+        arguments => {
+            ids => [42],
+        },
+
+        'start() does rpc method torrent-start');
 
     ok($client->stop(ids => 42), 'stop() with location and ids');
-    request_has(method => "torrent-stop", ids => '\[42\]', 'stop() does rpc method torrent-stop');
+    request_has(
+        method => "torrent-stop",
+        arguments => {
+            ids => [42],
+        },
+
+        'stop() does rpc method torrent-stop');
 
     ok($client->verify(ids => 42), 'verify() with location and ids');
-    request_has(method => "torrent-verify", ids => '\[42\]', 'verify() does rpc method torrent-verify');
+    request_has(
+        method => "torrent-verify",
+        arguments => {
+            ids => [42],
+        },
+
+        'verify() does rpc method torrent-verify');
 }
 
 {
@@ -108,21 +144,51 @@ my $rpc_response_code = 409;
     $client->read_torrents;
     request_has(
         method => 'torrent-get',
-        fields => '\["creator","uploadRatio","leechers","sizeWhenDone","recheckProgress","maxConnectedPeers","activityDate","id","swarmSpeed","peersConnected","pieceCount","torrentFile","name","isPrivate","webseedsSendingToUs","timesCompleted","addedDate","downloadedEver","downloaders","peersKnown","seeders","downloadDir","startDate","desiredAvailable","status","peersSendingToUs","peersGettingFromUs","rateDownload","corruptEver","leftUntilDone","uploadedEver","error","rateUpload","manualAnnounceTime","doneDate","totalSize","dateCreated","pieceSize","percentDone","errorString","haveValid","hashString","eta","haveUnchecked","comment","uploadLimit","downloadLimit","seedRatioMode","bandwidthPriority","downloadLimited","seedRatioLimit","uploadLimited","honorsSessionLimits"\]',
+        arguments => {
+            fields => [qw(
+                creator uploadRatio leechers sizeWhenDone recheckProgress
+                maxConnectedPeers activityDate id swarmSpeed peersConnected
+                pieceCount torrentFile name isPrivate webseedsSendingToUs
+                timesCompleted addedDate downloadedEver downloaders peersKnown
+                seeders downloadDir startDate desiredAvailable status
+                peersSendingToUs peersGettingFromUs rateDownload corruptEver
+                leftUntilDone uploadedEver error rateUpload manualAnnounceTime
+                doneDate totalSize dateCreated pieceSize percentDone errorString
+                haveValid hashString eta haveUnchecked comment uploadLimit
+                downloadLimit seedRatioMode bandwidthPriority downloadLimited
+                seedRatioLimit uploadLimited honorsSessionLimits)]
+        },
+
         'read_torrents() with all fields',
+    );
+
+    $client->read_torrents(fields => [qw(name eta)]);
+    request_has(
+        method => 'torrent-get',
+        arguments => {
+            fields => [qw(id name eta)],
+        },
+
+        'read_torrents() with only specific fields',
     );
 
     $client->read_torrents(lazy_read => 1);
     request_has(
         method => 'torrent-get',
-        fields => '\["id"\]',
+        arguments => {
+            fields => ["id"],
+        },
+
         'read_torrents() with lazy_read',
     );
 
     $client->read_torrents(ids => 42);
     request_has(
         method => 'torrent-get',
-        ids => '\[42\]',
+        arguments => {
+            ids => [42],
+        },
+
         'read_torrents() with ids',
     );
 }
@@ -141,27 +207,62 @@ TODO: {
 
 sub request_has {
     my $description = pop;
-    my @args = @_;
+    my %args = @_;
     my @failed;
 
-    unless($rpc_request =~ /"arguments":{/) {
-        push @failed, '"arguments" missing';
-    }
+    note $description;
 
-    while(@args) {
-        my $key = shift @args;
-        my $value = shift @args or last;
+    # $rpc_request is set to the latest post request the test would have done
+    my $rpc_req = decode_json($rpc_request);
 
-        unless($rpc_request =~ /"arguments":{.*?"$key":/) {
-            push @failed, qq["$key" missing];
-        }
-        unless(defined $value) {
-            next;
-        }
-        unless($rpc_request =~ /"arguments":{.*?"$key":"?$value/) {
-            push @failed, qq["$key:$value" is missing or incorrect];
-        }
-    }
+    # All requests must have a method parameter
+    ok exists $rpc_req->{method}, 'Existance of methods key';
 
-    is_deeply(\@failed, [], $description) or diag $rpc_request;
+    for my $top (keys %args) {
+        if (ref $args{$top}) {
+            for my $key (keys %{$args{$top}}) {
+                if (not defined $args{$top}->{$key}) {
+                    ok exists $rpc_req->{$top}->{$key},
+                        "Existance of $top\->{$key}";
+                    next;
+                }
+
+                if (not ref $rpc_req->{$top}->{$key} and
+                    not ref $args{$top}->{$key}) {
+                    is $rpc_req->{$top}->{$key}, $args{$top}->{$key},
+                        "Comparing value for $top\->{$key}";
+                    next;
+                }
+
+                is ref $rpc_req->{$top}->{$key}, 'ARRAY',
+                    "$top\->{$key} should be an array";
+
+                SKIP: {
+                    skip "See previous test failure",
+                        @{$args{$top}->{$key}} + 1 unless
+                        ref $rpc_req->{$top}->{$key} eq 'ARRAY';
+
+                    # Make sure all expected values exist
+                    my %seen;
+                    for my $elm (@{$args{$top}->{$key}}) {
+                        ok(
+                            grep({$elm eq $_} @{$rpc_req->{$top}->{$key}}),
+                            "$top\->{$key} should have expected values ($elm)");
+                        $seen{$elm} = 1;
+                    }
+
+                    # Make sure no unexpected values exist
+                    is_deeply [
+                        grep {! exists $seen{$_}} @{$rpc_req->{$top}->{$key}},
+                    ], [], "No unexpected elements found in $top\->{$key}";
+
+                }
+            }
+        }
+        else {
+            is $rpc_req->{$top}, $args{$top}, "Comparing value for $top";
+        }
+   }
 }
+
+done_testing();

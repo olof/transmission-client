@@ -130,7 +130,7 @@ sub _build__url {
  $str = $self->error;
  
 Returns the last error known to the object. All methods can return
-empty list in addtion to what spesified. Check this attribute if so happens.
+empty list in addition to what specified. Check this attribute if so happens.
 
 Like L</autodie>? Create your object with C<autodie> set to true and this
 module will throw exceptions in addition to setting this variable.
@@ -476,11 +476,16 @@ sub read_torrents {
     my %args = @_ == 1 ? (ids => $_[0]) : @_;
     my $list;
 
-    # set fields
-    if($args{'lazy_read'}) {
+    # set fields...
+    if(exists $args{'fields'}) { # ... based on user input
+        # We should always request id
+        push @{$args{'fields'}}, 'id' unless
+            grep {'id' eq $_} @{$args{'fields'}};
+    }
+    elsif($args{'lazy_read'}) { # ... as few fields as possible
         $args{'fields'} = ['id'];
     }
-    else {
+    else { # ... all fields
         $args{'fields'} = [
             keys %Transmission::Torrent::READ,
             keys %Transmission::Torrent::BOTH,
