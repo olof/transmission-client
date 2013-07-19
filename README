@@ -2,7 +2,7 @@ NAME
     Transmission::Client - Interface to Transmission
 
 VERSION
-    0.0603
+    0.07
 
 DESCRIPTION
     Transmission::Client is the main module in a collection of modules to
@@ -72,7 +72,7 @@ ATTRIBUTES
      $str = $self->error;
 
     Returns the last error known to the object. All methods can return empty
-    list in addtion to what spesified. Check this attribute if so happens.
+    list in addition to what specified. Check this attribute if so happens.
 
     Like "autodie"? Create your object with "autodie" set to true and this
     module will throw exceptions in addition to setting this variable.
@@ -218,5 +218,5 @@ LICENSE
     under the same terms as Perl itself.
 
 AUTHOR
-    Jan Henning Thorsen
+    Jan Henning Thorsen - "jhthorsen@cpan.org"
 

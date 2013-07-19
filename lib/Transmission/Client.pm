@@ -6,7 +6,7 @@ Transmission::Client - Interface to Transmission
 
 =head1 VERSION
 
-0.0603
+0.07
 
 =head1 DESCRIPTION
 
@@ -83,7 +83,7 @@ use Transmission::Torrent;
 use Transmission::Session;
 use constant RPC_DEBUG => $ENV{'TC_RPC_DEBUG'};
 
-our $VERSION = eval '0.0603';
+our $VERSION = '0.07';
 our $SESSION_ID_HEADER_NAME = 'X-Transmission-Session-Id';
 my $JSON = JSON::Any->new;
 
@@ -627,10 +627,12 @@ the same terms as Perl itself.
 
 =head1 AUTHOR
 
-Jan Henning Thorsen
+Jan Henning Thorsen - C<jhthorsen@cpan.org>
 
 =cut
 
 no MIME::Base64;
 no Moose;
+1;
+oose;
 1;

@@ -1,5 +1,11 @@
 Revision history for Transmission-Client
 
+0.07     Sat Jul 20 00:40:58 2013
+       - Fix test failures due to hash randomization (RT #81561)
+         Merge pull request #3 from afresh1/master
+       - Make fields parameter to read_torrents overrideable
+         Merge pull request #5 from olof/topic/override_fields
+
 0.0603   Mon May  7 19:29:53 2012
        - Use correct var when adding torrent
          Reference: https://rt.cpan.org/Ticket/Display.html?id=76859
