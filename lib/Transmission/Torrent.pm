@@ -18,6 +18,7 @@ L<Transmission::AttributeRole>
 =cut
 
 use Moose;
+use List::MoreUtils qw(uniq);
 use Transmission::Torrent::File;
 use Transmission::Types ':all';
 
@@ -465,14 +466,15 @@ BEGIN {
         );
     }
 
-    __PACKAGE__->meta->add_method(read_all => sub {
+    __PACKAGE__->meta->add_method(read => sub {
         my $self = shift;
+        my @fields = uniq(@_, 'id'); # id should always be requested
         my $lazy = $self->lazy_write;
         my $data;
 
         $data = $self->client->rpc('torrent-get' =>
                     ids => [ $self->id ],
-                    fields => [ keys %BOTH, keys %READ ],
+                    fields => [ @fields ],
                 ) or return;
 
         $data = $data->{'torrents'}[0] or return;
@@ -491,6 +493,11 @@ BEGIN {
         $self->lazy_write($lazy);
 
         return 1;
+    });
+
+    __PACKAGE__->meta->add_method(read_all => sub {
+        my $self = shift;
+        return $self->read(keys %BOTH, keys %READ);
     });
 
     $READ{'id'} = 'Int'; # this is required to be read
@@ -561,12 +568,18 @@ sub BUILDARGS {
     return $args;
 }
 
+=head2 read
+
+ $bool = $self->read('id', 'name', 'eta');
+
+This method will refresh all requested attributes in one RPC request, while
+calling one and one attribute, results in one-and-one request.
+
 =head2 read_all
 
  $bool = $self->read_all;
 
-This method will refresh all attributes in one RPC request, while calling one
-and one attribute, results in one-and-one request.
+Similar to L</read>, but requests all attributes.
 
 =head2 start
 
