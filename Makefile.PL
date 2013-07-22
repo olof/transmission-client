@@ -33,4 +33,4 @@ requires q(List::MoreUtils) => 0;
 test_requires q(Test::More) => 0;
 
 auto_install;
-WriteAll;
+WriteAll(sign => 1);
