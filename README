@@ -2,7 +2,7 @@ NAME
     Transmission::Client - Interface to Transmission
 
 VERSION
-    0.07
+    0.0701
 
 DESCRIPTION
     Transmission::Client is the main module in a collection of modules to
@@ -219,4 +219,6 @@ LICENSE
 
 AUTHOR
     Jan Henning Thorsen - "jhthorsen@cpan.org"
+
+    Current maintainer: Olof Johansson - "olof@cpan.org"
 
