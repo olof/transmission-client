@@ -634,5 +634,3 @@ Jan Henning Thorsen - C<jhthorsen@cpan.org>
 no MIME::Base64;
 no Moose;
 1;
-oose;
-1;
