@@ -25,12 +25,28 @@ for some (maybe weird?) default values - that is for coercion from "Any".
 
 use MooseX::Types -declare => [qw/number double string boolean array/];
 use MooseX::Types::Moose ':all';
+use B;
 
-subtype number, as Num;
-coerce number, from Any, via { -1 };
+# If Perl thinks a value is a string, JSON will encode it as such. But
+# Transmission is picky about how parameters are encoded in the JSON
+# request, so we make sure Perl knows how to store numeric types.
+sub _coerce_num {
+    local $_ = shift;
+    return -1 unless defined $_ and /^[0-9]+(?:\.[0-9]+)?$/;
+    return 0+$_;
+}
 
-subtype double, as Num;
-coerce double, from Any, via { -1 };
+sub _is_num {
+    my $sv = shift;
+    my $flags = B::svref_2object(\$sv)->FLAGS;
+    return $flags & (B::SVp_NOK | B::SVp_IOK) and not $flags & B::SVp_POK;
+}
+
+subtype number, as Num, where { _is_num($_) and $_ == int $_};
+coerce number, from Any, via { int _coerce_num($_) };
+
+subtype double, as Num, where { _is_num($_) };
+coerce double, from Any, via { _coerce_num($_) };
 
 subtype string, as Str;
 coerce string, from Any, via { defined $_ ? "$_" : "__UNDEF__" };
