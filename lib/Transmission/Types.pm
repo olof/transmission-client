@@ -9,6 +9,9 @@ Transmission::Types - Moose types for Transmission
 The types below is pretty much what you would expect them to be, execpt
 for some (maybe weird?) default values - that is for coercion from "Any".
 
+The type names correspond to types used in the Transmission RPC
+specification.
+
 =head1 TYPES
 
 =head2 number
