@@ -6,7 +6,6 @@
 /Makefile
 /Makefile.old
 *swp
-/MANIFEST
 /local
 *.tar.gz
 /Transmission-Client*

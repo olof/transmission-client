@@ -1,0 +1,7 @@
+^Transmission-Client
+^pm_to_blib$
+^MYMETA\.
+^blib/
+\.bak$
+^Makefile$
+^\.git/
