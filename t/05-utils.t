@@ -1,4 +1,5 @@
 #!perl
+# ex:ts=4:sw=4:sts=4:et
 
 use strict;
 use lib qw(lib);

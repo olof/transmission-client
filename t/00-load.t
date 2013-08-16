@@ -1,3 +1,4 @@
+# ex:ts=4:sw=4:sts=4:et
 use lib qw(lib);
 use Test::More;
 plan tests => 8;
