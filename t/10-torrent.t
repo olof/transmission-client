@@ -46,7 +46,8 @@ sub test_torrent_set {
         }, ]
     };
 
-    my $get_val = $args{coerced_val} // $args{value};
+    my $get_val = defined $args{coerced_val} ? $args{coerced_val} :
+                                               $args{value};
     is $torrent->$attr($args{value}), $get_val,
        'get return should be the same as value supplied to set';
 }
