@@ -1,5 +1,9 @@
 Revision history for Transmission-Client
 
+0.0801   Sat Aug 17 10:53:07 CEST 2013
+       - Don't use the defined or operator (//). It's only available
+         since perl 5.10.0. Fixes test failures.
+
 0.08     Fri Aug 16 17:28:12 CEST 2013
        - Improvements in type coercions for numeric types
 
