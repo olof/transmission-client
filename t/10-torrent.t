@@ -28,7 +28,12 @@ my (%rpc_return, %rpc_callbacks);
 my $torrent = new_ok 'Transmission::Torrent' => [
     id => 1,
     client => $client,
+    upload_ratio => 0.10,
+    eta => 3.14,
 ];
+
+is $torrent->upload_ratio, 0.10, "expected upload ratio (0.10)";
+is $torrent->eta, 3, "expected upload ratio (3) (truncated double)";
 
 # FIXME: ugly. :-(
 sub test_torrent_set {
