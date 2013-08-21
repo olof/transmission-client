@@ -7,7 +7,7 @@ Transmission::Client - Interface to Transmission
 
 =head1 VERSION
 
-0.0801
+0.0802
 
 =head1 DESCRIPTION
 
@@ -84,7 +84,7 @@ use Transmission::Torrent;
 use Transmission::Session;
 use constant RPC_DEBUG => $ENV{'TC_RPC_DEBUG'};
 
-our $VERSION = '0.0801';
+our $VERSION = '0.0802';
 our $SESSION_ID_HEADER_NAME = 'X-Transmission-Session-Id';
 my $JSON = JSON::Any->new;
 
