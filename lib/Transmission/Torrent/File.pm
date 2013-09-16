@@ -4,7 +4,7 @@ package Transmission::Torrent::File;
 
 =head1 NAME
 
-Transmission::Torrent::File
+Transmission::Torrent::File - file within a Transmission torrent
 
 =cut
 

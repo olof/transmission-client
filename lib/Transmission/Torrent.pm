@@ -4,7 +4,7 @@ package Transmission::Torrent;
 
 =head1 NAME
 
-Transmission::Torrent
+Transmission::Torrent - Transmission torrent object
 
 =head1 DESCRIPTION
 
