@@ -1,5 +1,6 @@
 # ex:ts=4:sw=4:sts=4:et
 package Transmission::Torrent::File;
+# See Transmission::Client for copyright statement.
 
 =head1 NAME
 

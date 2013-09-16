@@ -217,8 +217,8 @@ LICENSE
     This library is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
 
-AUTHOR
-    Jan Henning Thorsen - "jhthorsen@cpan.org"
+COPYRIGHT
+    Copyright 2009-2013, Jan Henning Thorsen <jhthorsen@cpan.org>
+      and contributors
 
     Current maintainer: Olof Johansson - "olof@cpan.org"
-

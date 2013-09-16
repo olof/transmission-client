@@ -1,4 +1,11 @@
 #!/usr/bin/perl
+# Copyright 2009-2010, Jan Henning Thorsen <jhthorsen@cpan.org>
+#    and contributors
+#
+# All rights reserved.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the same terms as Perl itself.
 
 =head1 NAME
 
