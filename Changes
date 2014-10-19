@@ -1,13 +1,16 @@
 Revision history for Transmission-Client
 
+0.0804   Sun Oct 19 18:30:59 CEST 2014
+       - Fix perl precedence warning in Types
+
 0.0803   Mon Sep 16 19:22:46 CEST 2013
        - Fix POD issues (NAME section syntax)
        - Add explicit copyright statements
        - Add .gitignore to MANIFEST.SKIP
        - Add AUTHORS file
 
-       Thanks to Marius Gavrilescu of the Debian Perl team for
-       reporting the above issues.
+         Thanks to Marius Gavrilescu of the Debian Perl team for
+         reporting the above issues.
 
 0.0802   Wed Aug 21 17:49:02 CEST 2013
        - Update types of Transmission::Torrent attributes
