@@ -44,7 +44,12 @@ sub _coerce_num {
 sub _is_num {
     my $sv = shift;
     my $flags = B::svref_2object(\$sv)->FLAGS;
-    return $flags & (B::SVp_NOK | B::SVp_IOK) and not $flags & B::SVp_POK;
+
+    # Make sure perl internally thinks of $sv as an integer
+    # or numeric value. In earlier releases I also made sure that
+    # it's not a string ($flags & B::SVp_POK), but POK and
+    # (NOK|IOK) seem to be mutually exclusive.
+    return $flags & (B::SVp_NOK | B::SVp_IOK);
 }
 
 subtype number, as Num, where { _is_num($_) and $_ == int $_};
