@@ -4,7 +4,7 @@ use strict;
 use Test::More;
 use Transmission::Torrent;
 use Transmission::Client;
-use JSON;
+use JSON::MaybeXS;
 
 $SIG{'__DIE__'} = \&Carp::confess;
 

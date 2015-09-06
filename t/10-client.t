@@ -4,7 +4,7 @@ use strict;
 use lib qw(lib);
 use Test::More;
 use Transmission::Client;
-use JSON;
+use JSON::MaybeXS;
 
 $SIG{'__DIE__'} = \&Carp::confess;
 

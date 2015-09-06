@@ -84,7 +84,7 @@ L<Transmission::Utils>
 use Moose;
 use DateTime;
 use DateTime::Duration;
-use JSON::Any;
+use JSON::MaybeXS;
 use LWP::UserAgent;
 use MIME::Base64;
 use Transmission::Torrent;
@@ -93,7 +93,7 @@ use constant RPC_DEBUG => $ENV{'TC_RPC_DEBUG'};
 
 our $VERSION = '0.0804';
 our $SESSION_ID_HEADER_NAME = 'X-Transmission-Session-Id';
-my $JSON = JSON::Any->new;
+my $JSON = JSON::MaybeXS->new;
 
 with 'Transmission::AttributeRole';
 
