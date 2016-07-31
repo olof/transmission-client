@@ -1,5 +1,10 @@
 Revision history for Transmission-Client
 
+0.0805   Sun Jul 31 17:35:16 CEST 2016
+       - Update metadata: bugtracker and VCS repository, pointing to
+         github.
+       - Use JSON::MaybeXS instead of JSON::Any (Fixes rt.cpan.org#102465)
+
 0.0804   Sun Oct 19 18:30:59 CEST 2014
        - Fix perl precedence warning in Types
 
