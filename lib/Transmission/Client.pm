@@ -307,13 +307,13 @@ has session_id => (
 
  $bool = $self->add(%args);
 
- key              | value type & description
- -----------------+-------------------------------------------------
- download_dir     | string    path to download the torrent to
- filename         | string    filename or URL of the .torrent file
- metainfo         | string    torrent content
- paused           | boolean   if true, don't start the torrent
- peer_limit       | number    maximum number of peers
+ key              | value type | description
+ -----------------+------------+------------------------------------
+ download_dir     | string     | path to download the torrent to
+ filename         | string     | filename or URL of the .torrent file
+ metainfo         | string     | torrent content
+ paused           | boolean    | if true, don't start the torrent
+ peer_limit       | number     | maximum number of peers
 
 Either "filename" or "metainfo" MUST be included. All other arguments are
 optional.
@@ -348,10 +348,10 @@ sub add {
 
  $bool = $self->remove(%args);
 
- key                | value type & description
- -------------------+-------------------------------------------------
- ids                | array    torrent list, as described in 3.1
- delete_local_data  | boolean  delete local data. (default: false)
+ key                | value type | description
+ -------------------+------------+------------------------------------
+ ids                | array      | torrent list, as described in 3.1
+ delete_local_data  | boolean    | delete local data. (default: false)
 
 C<ids> can also be the string "all". C<ids> is required.
 
@@ -377,12 +377,12 @@ sub remove {
  $bool = $self->move(%args);
 
 
- string      | value type & description
- ------------+-------------------------------------------------
- ids         | array      torrent list, as described in 3.1
- location    | string     the new torrent location
- move        | boolean    if true, move from previous location.
-             |            otherwise, search "location" for files
+ string      | value type | description
+ ------------+------------+------------------------------------
+ ids         | array      | torrent list, as described in 3.1
+ location    | string     | the new torrent location
+ move        | boolean    | if true, move from previous location.
+             |            | otherwise, search "location" for files
 
 C<ids> can also be the string "all". C<ids> and C<location> is required.
 
@@ -466,11 +466,10 @@ sub _do_ids_action {
  @list = $self->read_torrents(%args);
  $array_ref = $self->read_torrents(%args);
 
- key         | value type & description
- ------------+-------------------------------------------------
- ids         | array      torrent list, as described in 3.1
-             |            this is optional
- lazy_read   | will create objects with as little data as possible.
+ key         | value type | description
+ ------------+------------+------------------------------------
+ ids         | array      | optional torrent list, as described in 3.1.
+ lazy_read   |            | will create objects with as little data as possible.
 
 =over 4
 
