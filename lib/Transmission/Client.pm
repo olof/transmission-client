@@ -19,14 +19,32 @@ Transmission::Client - Interface to Transmission
 =head1 DESCRIPTION
 
 L<Transmission::Client> is the main module in a collection of modules to
-communicate with Transmission. Transmission is:
+communicate with Transmission. Transmission is
+ a cross-platform BitTorrent client that is:
 
- Transmission is a cross-platform BitTorrent client that is:
-  * Easy
-  * Lean
-  * Native
-  * Powerful
-  * Free
+=over
+
+=item 
+
+Easy
+
+=item 
+
+Lean
+
+=item 
+
+Native
+
+=item 
+
+Powerful
+
+=item 
+
+Free
+
+=back
 
 If you want to communicate with "transmission-daemon", this is a module
 which can help you with that.
