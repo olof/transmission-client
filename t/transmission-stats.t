@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1;
+use Test::More tests => 3;
 
 use Transmission::Stats;
 
@@ -22,7 +22,10 @@ my $stats = Transmission::Stats->new( client => Mock::Client->new );
 
 can_ok $stats, qw/ _tmp_store read_all /;
 
-subtest 'read_all' => sub {
+for my $method ( qw/  read_all _tmp_store / ) {
+subtest $method => sub {
+    my $stats = Transmission::Stats->new( client => Mock::Client->new );
+
     $stats->read_all;
 
     for ( keys %::test_stats ) {
@@ -30,3 +33,4 @@ subtest 'read_all' => sub {
         is $stats->$method => $::test_stats{$_};
     }
 };
+}
