@@ -40,6 +40,14 @@ with 'Transmission::AttributeRole';
 
  $num = $self->upload_speed;
 
+=head1 METHODS
+
+=head2 read_all
+
+Initialize/update stats attributes using Transmission RPC (C<session-stats>).
+Also returns all attributes as a hash reference (named as per the attributes of
+the class).
+
 =cut
 
 BEGIN {
