@@ -642,15 +642,22 @@ the same terms as Perl itself.
 
 =head1 COPYRIGHT AND AUTHORS
 
-Copyright 2009-2013, Jan Henning Thorsen <jhthorsen@cpan.org> and contributors
+Copyright 2009-2019 by Transmission::Client contributors
 
-Current maintainer: Olof Johansson - C<olof@cpan.org>
+See C<git log --format="%aN E<lt>%aEE<gt>" | sort | uniq> in the git repository
+for the reference list of contributors.
 
 =head2 CONTRIBUTORS
 
 =over
 
-=item Andrew Fresh
+=item * Jan Henning Thorsen (original author)
+
+=item * Olof Johansson (current maintainer)
+
+=item * Andrew Fresh
+
+=item * Yanick Champoux
 
 =back
 
